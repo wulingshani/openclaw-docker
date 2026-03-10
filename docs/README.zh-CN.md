@@ -20,10 +20,16 @@
 浏览器 → Nginx（登录 + 会话管理）→ OpenClaw Gateway（内部）
 ```
 
+## 下载
+
+| 来源 | 地址 |
+|------|------|
+| GitHub | `git clone https://github.com/wulingshani/openclaw-docker.git` |
+| Gitee | `git clone https://gitee.com/luoyile_1/openclaw-docker.git` |
+
 ## 快速开始
 
 ```bash
-git clone https://github.com/wulingshani/openclaw-docker.git
 cd openclaw-docker
 chmod +x setup.sh
 ./setup.sh

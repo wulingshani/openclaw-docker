@@ -20,10 +20,16 @@ Docker Compose deployment for [OpenClaw](https://openclaw.ai/) with Nginx revers
 Browser → Nginx (login + session) → OpenClaw Gateway (internal)
 ```
 
+## Download
+
+| Source | URL |
+|--------|-----|
+| GitHub | `git clone https://github.com/wulingshani/openclaw-docker.git` |
+| Gitee | `git clone https://gitee.com/luoyile_1/openclaw-docker.git` |
+
 ## Quick Start
 
 ```bash
-git clone https://github.com/wulingshani/openclaw-docker.git
 cd openclaw-docker
 chmod +x setup.sh
 ./setup.sh
