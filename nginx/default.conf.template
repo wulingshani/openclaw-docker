@@ -1,0 +1,69 @@
+# Session cookie validation
+map_hash_bucket_size 128;
+map $cookie_oc_session $session_valid {
+    "${SESSION_SECRET}" 1;
+    default 0;
+}
+
+server {
+    listen 80;
+    server_name _;
+
+    # ── Login page (no auth) ──
+    location = /login {
+        root /usr/share/nginx/html;
+        try_files /login.html =404;
+    }
+
+    # ── Login verification: checks Basic Auth, sets session cookie ──
+    location = /auth/verify {
+        auth_basic "OpenClaw";
+        auth_basic_user_file /etc/nginx/.htpasswd;
+        add_header Set-Cookie "oc_session=${SESSION_SECRET}; Path=/; HttpOnly; SameSite=Strict; Max-Age=604800" always;
+        add_header Content-Type application/json always;
+        return 200 '{"status":"ok","token":"${OPENCLAW_GATEWAY_TOKEN}"}';
+    }
+
+    # ── Logout: clear cookie ──
+    location = /auth/logout {
+        add_header Set-Cookie "oc_session=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0" always;
+        return 302 /login;
+    }
+
+    # ── Internal session check ──
+    location = /auth/check {
+        internal;
+        if ($session_valid = 1) {
+            return 200;
+        }
+        return 401;
+    }
+
+    # ── Health check (no auth) ──
+    location = /healthz {
+        proxy_pass http://openclaw-gateway:18789/healthz;
+    }
+
+    # ── All other routes: require valid session ──
+    location / {
+        auth_request /auth/check;
+        error_page 401 = @login_redirect;
+
+        proxy_pass http://openclaw-gateway:18789;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # WebSocket
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_read_timeout 86400s;
+        proxy_send_timeout 86400s;
+    }
+
+    location @login_redirect {
+        return 302 /login;
+    }
+}
