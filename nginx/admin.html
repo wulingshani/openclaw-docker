@@ -437,6 +437,20 @@
     background: rgba(255,255,255,.1);
     color: #f0f0f0;
   }
+  .footer {
+    text-align: center;
+    padding: 24px 0 16px;
+    color: rgba(255, 255, 255, .2);
+    font-size: 12px;
+  }
+  .footer a {
+    color: rgba(255, 255, 255, .35);
+    text-decoration: none;
+    transition: color .2s;
+  }
+  .footer a:hover {
+    color: rgba(255, 255, 255, .6);
+  }
 </style>
 </head>
 <body>
@@ -463,6 +477,7 @@
   </div>
 
   <div id="providerList"></div>
+  <div class="footer" id="footer"></div>
 </div>
 
 <div class="toast-container" id="toasts"></div>
@@ -691,6 +706,8 @@ function applyStaticI18n() {
   document.getElementById('btnRestart').textContent = t('restart');
   document.getElementById('btnAdd').textContent = t('add_provider');
   document.getElementById('statusText').textContent = t('checking');
+  document.getElementById('footer').innerHTML =
+    '<a href="https://github.com/wulingshani/openclaw-docker" target="_blank">wulingshan</a> \u00b7 ' + t('page_title');
 }
 
 function setLang(lang) {

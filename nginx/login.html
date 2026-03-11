@@ -182,6 +182,14 @@
     color: rgba(255, 255, 255, .2);
     font-size: 12px;
   }
+  .footer a {
+    color: rgba(255, 255, 255, .35);
+    text-decoration: none;
+    transition: color .2s;
+  }
+  .footer a:hover {
+    color: rgba(255, 255, 255, .6);
+  }
 
   /* ── Language switcher ── */
   .lang-sw {
@@ -241,15 +249,15 @@
       <div class="error" id="error"></div>
     </form>
 
-    <div class="footer" data-i18n="footer"></div>
+    <div class="footer" id="footer"></div>
   </div>
 
 <script>
 const LANGS = {
-  'zh-CN': { label: '简体', subtitle: '请登录以继续', username: '用户名', username_ph: '输入用户名', password: '密码', password_ph: '输入密码', sign_in: '登录', error_msg: '用户名或密码错误', footer: 'Made by wulingshan \u00b7 基于 Cookie 的会话' },
-  'zh-TW': { label: '繁體', subtitle: '請登入以繼續', username: '使用者名稱', username_ph: '輸入使用者名稱', password: '密碼', password_ph: '輸入密碼', sign_in: '登入', error_msg: '使用者名稱或密碼錯誤', footer: 'Made by wulingshan \u00b7 基於 Cookie 的工作階段' },
-  en:      { label: 'EN', subtitle: 'Please sign in to continue', username: 'Username', username_ph: 'Enter username', password: 'Password', password_ph: 'Enter password', sign_in: 'Sign In', error_msg: 'Wrong username or password', footer: 'Made by wulingshan \u00b7 Cookie-based session' },
-  ja:      { label: '日本語', subtitle: 'ログインしてください', username: 'ユーザー名', username_ph: 'ユーザー名を入力', password: 'パスワード', password_ph: 'パスワードを入力', sign_in: 'ログイン', error_msg: 'ユーザー名またはパスワードが正しくありません', footer: 'Made by wulingshan \u00b7 Cookie ベースのセッション' },
+  'zh-CN': { label: '简体', subtitle: '请登录以继续', username: '用户名', username_ph: '输入用户名', password: '密码', password_ph: '输入密码', sign_in: '登录', error_msg: '用户名或密码错误', footer: '基于 Cookie 的会话' },
+  'zh-TW': { label: '繁體', subtitle: '請登入以繼續', username: '使用者名稱', username_ph: '輸入使用者名稱', password: '密碼', password_ph: '輸入密碼', sign_in: '登入', error_msg: '使用者名稱或密碼錯誤', footer: '基於 Cookie 的工作階段' },
+  en:      { label: 'EN', subtitle: 'Please sign in to continue', username: 'Username', username_ph: 'Enter username', password: 'Password', password_ph: 'Enter password', sign_in: 'Sign In', error_msg: 'Wrong username or password', footer: 'Cookie-based session' },
+  ja:      { label: '日本語', subtitle: 'ログインしてください', username: 'ユーザー名', username_ph: 'ユーザー名を入力', password: 'パスワード', password_ph: 'パスワードを入力', sign_in: 'ログイン', error_msg: 'ユーザー名またはパスワードが正しくありません', footer: 'Cookie ベースのセッション' },
 };
 
 let curLang = localStorage.getItem('oc_lang') || 'zh-CN';
@@ -265,6 +273,8 @@ function applyLang() {
   document.querySelectorAll('[data-ph]').forEach(el => {
     el.placeholder = t(el.dataset.ph);
   });
+  document.getElementById('footer').innerHTML =
+    '<a href="https://github.com/wulingshani/openclaw-docker" target="_blank">wulingshan</a> \u00b7 ' + t('footer');
   // rebuild switcher
   const sw = document.getElementById('langSw');
   sw.innerHTML = Object.entries(LANGS).map(([k, v]) =>
