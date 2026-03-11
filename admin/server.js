@@ -1,3 +1,7 @@
+// OpenClaw Admin API Server
+// Author: wulingshan
+// https://github.com/wulingshani/openclaw-docker
+
 const http = require('http');
 const fs = require('fs');
 const path = require('path');

@@ -6,6 +6,12 @@ Docker Compose deployment for [OpenClaw](https://openclaw.ai/) with Nginx revers
 
 ![login](https://img.shields.io/badge/auth-login_page-blue) ![docker](https://img.shields.io/badge/docker-compose-2496ED)
 
+## Screenshots
+
+| Login | Admin - Provider List | Admin - Add Provider |
+|:-----:|:---------------------:|:--------------------:|
+| ![Login](image/login.png) | ![Admin List](image/admin-list.png) | ![Admin Add](image/admin-add.png) |
+
 ## Features
 
 - **One-command deploy** — `setup.sh` handles everything
@@ -118,6 +124,10 @@ docker compose --profile cli run --rm openclaw-cli devices list
 | Network | Gateway & Admin not exposed; only Nginx port published |
 
 For public deployment, add HTTPS via Cloudflare Tunnel, Caddy, or Traefik.
+
+## Author
+
+**wulingshan** — [GitHub](https://github.com/wulingshani) | [Gitee](https://gitee.com/luoyile_1)
 
 ## License
 

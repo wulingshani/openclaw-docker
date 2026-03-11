@@ -6,6 +6,12 @@
 
 ![login](https://img.shields.io/badge/认证-登录页面-blue) ![docker](https://img.shields.io/badge/docker-compose-2496ED)
 
+## 截图
+
+| 登录页 | 管理面板 - 服务商列表 | 管理面板 - 添加服务商 |
+|:------:|:-------------------:|:-------------------:|
+| ![登录](../image/login.png) | ![列表](../image/admin-list.png) | ![添加](../image/admin-add.png) |
+
 ## 特性
 
 - **一条命令部署** — `setup.sh` 自动完成所有配置
@@ -118,6 +124,10 @@ docker compose --profile cli run --rm openclaw-cli devices list
 | 网络 | Gateway 和 Admin 不直接暴露，仅 Nginx 端口对外 |
 
 公网部署建议通过 Cloudflare Tunnel、Caddy 或 Traefik 添加 HTTPS。
+
+## 作者
+
+**wulingshan** — [GitHub](https://github.com/wulingshani) | [Gitee](https://gitee.com/luoyile_1)
 
 ## 许可证
 
