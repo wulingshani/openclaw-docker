@@ -27,10 +27,10 @@ CLAUDE_WEB_COOKIE=
 EOF
 
 # Create directories
-mkdir -p data/config data/workspace
+mkdir -p data/config data/workspace admin
 
-# Write gateway config
-cat > data/config/openclaw.json <<'JSON'
+# Write gateway config (token must match .env to avoid mismatch on first boot)
+cat > data/config/openclaw.json <<EOF
 {
   "gateway": {
     "mode": "local",
@@ -39,10 +39,14 @@ cat > data/config/openclaw.json <<'JSON'
       "allowedOrigins": ["*"],
       "allowInsecureAuth": true,
       "dangerouslyDisableDeviceAuth": true
+    },
+    "auth": {
+      "mode": "token",
+      "token": "${GATEWAY_TOKEN}"
     }
   }
 }
-JSON
+EOF
 
 # Generate .htpasswd
 docker run --rm httpd:alpine htpasswd -nbB "$AUTH_USER" "$AUTH_PASS" > nginx/.htpasswd

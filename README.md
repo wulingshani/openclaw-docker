@@ -2,7 +2,7 @@
 
 [简体中文](docs/README.zh-CN.md) | [繁體中文](docs/README.zh-TW.md) | [日本語](docs/README.ja.md)
 
-Docker Compose deployment for [OpenClaw](https://openclaw.ai/) with Nginx reverse proxy, custom login page, and cookie-based authentication.
+Docker Compose deployment for [OpenClaw](https://openclaw.ai/) with Nginx reverse proxy, web admin panel, and cookie-based authentication.
 
 ![login](https://img.shields.io/badge/auth-login_page-blue) ![docker](https://img.shields.io/badge/docker-compose-2496ED)
 
@@ -10,15 +10,20 @@ Docker Compose deployment for [OpenClaw](https://openclaw.ai/) with Nginx revers
 
 - **One-command deploy** — `setup.sh` handles everything
 - **Custom login page** — no ugly browser popups
+- **Web admin panel** — manage API keys in browser at `/admin`, no manual file editing
 - **Cookie session** — 7-day auto-expiry, HttpOnly + SameSite protection
 - **Gateway token auto-inject** — login and go, no manual token pasting
-- **Pre-configured** — skips device pairing, works out of the box
+- **Multi-language UI** — Chinese (Simplified/Traditional), English, Japanese
+- **Auto config generation** — `openclaw.json` created automatically on first start
 
 ## Architecture
 
 ```
 Browser → Nginx (login + session) → OpenClaw Gateway (internal)
+       → /admin                   → Admin API (key management)
 ```
+
+**Startup order:** Admin → Gateway → Nginx (each waits for the previous to be healthy)
 
 ## Download
 
@@ -44,21 +49,16 @@ Custom credentials:
 ./setup.sh admin MyPass123 8080
 ```
 
+## API Key Management
+
+After login, visit **`/admin`** to manage API keys through the web interface:
+
+- Add / edit / delete providers (Anthropic, OpenAI, Google, SiliconFlow, custom)
+- Visual model configuration — no JSON editing needed
+- Gateway auto-restarts after changes
+- Real-time gateway status indicator
+
 ## Configuration
-
-### AI Provider Keys
-
-Edit `.env` after setup:
-
-```env
-CLAUDE_AI_SESSION_KEY=your_key_here
-```
-
-Then restart:
-
-```bash
-docker compose restart openclaw-gateway
-```
 
 ### Change Login Credentials
 
@@ -92,15 +92,18 @@ docker compose --profile cli run --rm openclaw-cli devices list
 ## Project Structure
 
 ```
-├── Dockerfile                 # Nginx image with login page baked in
-├── docker-compose.yml         # Service orchestration
+├── Dockerfile                 # Nginx image with login + admin pages
+├── docker-compose.yml         # Service orchestration (4 services)
 ├── setup.sh                   # One-command setup script
 ├── .env.example               # Environment template
+├── admin/
+│   └── server.js              # Admin API server (Node.js, zero dependencies)
 ├── nginx/
 │   ├── default.conf.template  # Nginx config (envsubst processed)
-│   └── login.html             # Custom login page
+│   ├── login.html             # Custom login page
+│   └── admin.html             # API key management page
 └── data/
-    ├── config/                # Gateway config (persistent)
+    ├── config/                # Gateway config (auto-generated, persistent)
     └── workspace/             # Agent workspace (persistent)
 ```
 
@@ -110,8 +113,9 @@ docker compose --profile cli run --rm openclaw-cli devices list
 |-------|-----------|
 | Login | Nginx Basic Auth (bcrypt) |
 | Session | HttpOnly cookie, SameSite=Strict, 7-day expiry |
+| Admin | Session-protected, same cookie auth as main app |
 | Gateway | Token-based WebSocket auth (auto-injected) |
-| Network | Gateway not exposed; only Nginx port published |
+| Network | Gateway & Admin not exposed; only Nginx port published |
 
 For public deployment, add HTTPS via Cloudflare Tunnel, Caddy, or Traefik.
 

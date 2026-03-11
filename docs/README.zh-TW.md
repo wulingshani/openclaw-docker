@@ -2,7 +2,7 @@
 
 [English](../README.md) | [简体中文](README.zh-CN.md) | [日本語](README.ja.md)
 
-使用 Docker Compose 部署 [OpenClaw](https://openclaw.ai/)，整合 Nginx 反向代理、自訂登入頁面和 Cookie 會話認證。
+使用 Docker Compose 部署 [OpenClaw](https://openclaw.ai/)，整合 Nginx 反向代理、Web 管理面板和 Cookie 會話認證。
 
 ![login](https://img.shields.io/badge/認證-登入頁面-blue) ![docker](https://img.shields.io/badge/docker-compose-2496ED)
 
@@ -10,15 +10,20 @@
 
 - **一條指令部署** — `setup.sh` 自動完成所有設定
 - **自訂登入頁面** — 告別醜陋的瀏覽器彈窗
+- **Web 管理面板** — 在瀏覽器中管理 API 金鑰（`/admin`），無需手動編輯檔案
 - **Cookie 會話** — 7 天自動過期，HttpOnly + SameSite 防護
 - **Gateway Token 自動注入** — 登入即用，無需手動貼上 Token
-- **開箱即用** — 跳過裝置配對，部署完成直接使用
+- **多語言介面** — 簡體中文、繁體中文、英文、日文
+- **設定自動產生** — `openclaw.json` 首次啟動時自動建立
 
 ## 架構
 
 ```
 瀏覽器 → Nginx（登入 + 會話管理）→ OpenClaw Gateway（內部）
+     → /admin                   → Admin API（金鑰管理）
 ```
+
+**啟動順序：** Admin → Gateway → Nginx（每個服務等待前一個健康後再啟動）
 
 ## 下載
 
@@ -44,21 +49,16 @@ chmod +x setup.sh
 ./setup.sh admin MyPass123 8080
 ```
 
+## API 金鑰管理
+
+登入後造訪 **`/admin`**，透過 Web 介面管理 API 金鑰：
+
+- 新增 / 編輯 / 刪除服務商（Anthropic、OpenAI、Google、SiliconFlow、自訂）
+- 視覺化模型設定 — 無需編寫 JSON
+- 修改後 Gateway 自動重啟
+- 即時 Gateway 狀態指示
+
 ## 設定
-
-### AI 服務金鑰
-
-部署後編輯 `.env`：
-
-```env
-CLAUDE_AI_SESSION_KEY=your_key_here
-```
-
-重新啟動生效：
-
-```bash
-docker compose restart openclaw-gateway
-```
 
 ### 變更登入密碼
 
@@ -92,15 +92,18 @@ docker compose --profile cli run --rm openclaw-cli devices list
 ## 專案結構
 
 ```
-├── Dockerfile                 # 內建登入頁面的 Nginx 映像
-├── docker-compose.yml         # 服務編排
+├── Dockerfile                 # 內建登入頁和管理頁的 Nginx 映像
+├── docker-compose.yml         # 服務編排（4 個服務）
 ├── setup.sh                   # 一鍵部署腳本
 ├── .env.example               # 環境變數範本
+├── admin/
+│   └── server.js              # 管理 API 服務（Node.js，零依賴）
 ├── nginx/
 │   ├── default.conf.template  # Nginx 設定範本（envsubst 處理）
-│   └── login.html             # 自訂登入頁面
+│   ├── login.html             # 自訂登入頁面
+│   └── admin.html             # API 金鑰管理頁面
 └── data/
-    ├── config/                # Gateway 設定（持久化）
+    ├── config/                # Gateway 設定（自動產生，持久化）
     └── workspace/             # 工作區檔案（持久化）
 ```
 
@@ -110,8 +113,9 @@ docker compose --profile cli run --rm openclaw-cli devices list
 |------|------|
 | 登入 | Nginx Basic Auth（bcrypt 加密） |
 | 會話 | HttpOnly Cookie，SameSite=Strict，7 天過期 |
+| 管理 | 會話保護，與主應用使用相同的 Cookie 認證 |
 | 閘道 | 基於 Token 的 WebSocket 認證（自動注入） |
-| 網路 | Gateway 不直接暴露，僅 Nginx 連接埠對外 |
+| 網路 | Gateway 和 Admin 不直接暴露，僅 Nginx 連接埠對外 |
 
 公開部署建議透過 Cloudflare Tunnel、Caddy 或 Traefik 加入 HTTPS。
 

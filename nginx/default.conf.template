@@ -39,6 +39,26 @@ server {
         return 401;
     }
 
+    # ── Admin page (session protected) ──
+    location = /admin {
+        auth_request /auth/check;
+        error_page 401 = @login_redirect;
+        root /usr/share/nginx/html;
+        try_files /admin.html =404;
+    }
+
+    # ── Admin API (session protected, proxy to admin service) ──
+    location /admin/api/ {
+        auth_request /auth/check;
+        error_page 401 = @login_redirect;
+
+        rewrite ^/admin/api/(.*)$ /api/$1 break;
+        proxy_pass http://openclaw-admin:3456;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
     # ── Health check (no auth) ──
     location = /healthz {
         proxy_pass http://openclaw-gateway:18789/healthz;

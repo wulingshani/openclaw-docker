@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpenClaw Admin</title>
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #0a0a0f;
+    color: #f0f0f0;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 80%, rgba(220, 50, 47, .12), transparent),
+      radial-gradient(ellipse 60% 80% at 80% 20%, rgba(255, 120, 50, .10), transparent),
+      radial-gradient(ellipse 50% 50% at 50% 50%, rgba(255, 80, 60, .06), transparent);
+    animation: bgShift 12s ease-in-out infinite alternate;
+    z-index: -1;
+  }
+  @keyframes bgShift {
+    0%   { opacity: .6; transform: scale(1); }
+    100% { opacity: 1;  transform: scale(1.1); }
+  }
+
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 40px 20px 60px;
+  }
+
+  /* ── Header ── */
+  .header {
+    text-align: center;
+    margin-bottom: 36px;
+    animation: cardIn .6s cubic-bezier(.16, 1, .3, 1) both;
+  }
+  .header .logo-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #dc322f 0%, #ff6b35 100%);
+    font-size: 28px;
+    margin-bottom: 12px;
+    box-shadow: 0 8px 32px rgba(220, 50, 47, .3);
+  }
+  .header h1 { font-size: 22px; font-weight: 600; letter-spacing: -.3px; }
+  .header p { color: rgba(255,255,255,.35); font-size: 13px; margin-top: 4px; }
+
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(20px) scale(.97); }
+  }
+
+  /* ── Top bar ── */
+  .top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    gap: 12px;
+    flex-wrap: wrap;
+    animation: cardIn .6s .1s cubic-bezier(.16, 1, .3, 1) both;
+  }
+
+  .gateway-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: rgba(255,255,255,.5);
+  }
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #666;
+    flex-shrink: 0;
+  }
+  .status-dot.running { background: #2ecc40; box-shadow: 0 0 8px rgba(46,204,64,.4); }
+  .status-dot.starting { background: #ffdc00; box-shadow: 0 0 8px rgba(255,220,0,.4); }
+  .status-dot.stopped { background: #ff4136; }
+
+  .top-actions { display: flex; gap: 8px; }
+
+  /* ── Buttons ── */
+  .btn {
+    height: 36px;
+    padding: 0 16px;
+    border: none;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+  .btn:hover:not(:disabled) { transform: translateY(-1px); }
+  .btn:active:not(:disabled) { transform: translateY(0); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #dc322f 0%, #e8553a 100%);
+    color: #fff;
+  }
+  .btn-primary:hover:not(:disabled) { box-shadow: 0 4px 16px rgba(220,50,47,.35); }
+
+  .btn-secondary {
+    background: rgba(255,255,255,.08);
+    color: rgba(255,255,255,.7);
+    border: 1px solid rgba(255,255,255,.08);
+  }
+  .btn-secondary:hover:not(:disabled) { background: rgba(255,255,255,.12); color: #fff; }
+
+  .btn-danger {
+    background: rgba(255,65,54,.1);
+    color: #ff6b6b;
+    border: 1px solid rgba(255,65,54,.15);
+  }
+  .btn-danger:hover:not(:disabled) { background: rgba(255,65,54,.2); }
+
+  .btn-sm { height: 30px; padding: 0 10px; font-size: 12px; border-radius: 8px; }
+
+  /* ── Cards ── */
+  .card {
+    background: rgba(18, 18, 24, .85);
+    backdrop-filter: blur(40px);
+    border: 1px solid rgba(255, 255, 255, .06);
+    border-radius: 16px;
+    padding: 20px 24px;
+    margin-bottom: 12px;
+    box-shadow: 0 0 0 1px rgba(255,255,255,.03), 0 8px 32px rgba(0,0,0,.3);
+    animation: cardIn .5s cubic-bezier(.16, 1, .3, 1) both;
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .card-header h3 {
+    font-size: 16px;
+    font-weight: 600;
+  }
+  .card-actions { display: flex; gap: 6px; }
+
+  .card-field {
+    margin-bottom: 8px;
+  }
+  .card-field:last-child { margin-bottom: 0; }
+  .card-label {
+    font-size: 11px;
+    color: rgba(255,255,255,.4);
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    margin-bottom: 2px;
+  }
+  .card-value {
+    font-size: 14px;
+    color: rgba(255,255,255,.7);
+    font-family: 'SF Mono', Menlo, Consolas, monospace;
+    word-break: break-all;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 48px 20px;
+    color: rgba(255,255,255,.3);
+    font-size: 14px;
+  }
+
+  /* ── Modal ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn .2s;
+    padding: 20px;
+  }
+  @keyframes fadeIn { from { opacity: 0; } }
+
+  .modal {
+    width: 100%;
+    max-width: 520px;
+    max-height: 90vh;
+    overflow-y: auto;
+    background: rgba(22, 22, 30, .95);
+    backdrop-filter: blur(40px);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 20px;
+    padding: 32px;
+    box-shadow: 0 24px 80px rgba(0,0,0,.6);
+    animation: modalIn .3s cubic-bezier(.16, 1, .3, 1) both;
+  }
+  @keyframes modalIn {
+    from { opacity: 0; transform: translateY(20px) scale(.95); }
+  }
+  .modal h2 {
+    font-size: 18px;
+    margin-bottom: 24px;
+  }
+
+  .field {
+    margin-bottom: 16px;
+  }
+  .field label {
+    display: block;
+    color: rgba(255,255,255,.5);
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    margin-bottom: 6px;
+  }
+  .field input, .field select, .field textarea {
+    width: 100%;
+    height: 42px;
+    padding: 0 14px;
+    background: rgba(255,255,255,.05);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 10px;
+    color: #f0f0f0;
+    font-size: 14px;
+    outline: none;
+    transition: all .2s;
+    font-family: inherit;
+  }
+  .field textarea {
+    height: 120px;
+    padding: 10px 14px;
+    resize: vertical;
+    font-family: 'SF Mono', Menlo, Consolas, monospace;
+    font-size: 13px;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus {
+    border-color: rgba(220,50,47,.5);
+    background: rgba(255,255,255,.07);
+    box-shadow: 0 0 0 3px rgba(220,50,47,.1);
+  }
+  .field input::placeholder, .field textarea::placeholder { color: rgba(255,255,255,.2); }
+  .field select { cursor: pointer; appearance: none; }
+  .field .hint {
+    font-size: 11px;
+    color: rgba(255,255,255,.3);
+    margin-top: 4px;
+  }
+
+  .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 24px;
+  }
+
+  /* ── Toast ── */
+  .toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .toast {
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: 0 8px 32px rgba(0,0,0,.4);
+    animation: toastIn .3s cubic-bezier(.16, 1, .3, 1) both;
+    max-width: 360px;
+  }
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateX(30px); }
+  }
+  .toast.success {
+    background: rgba(46, 204, 64, .15);
+    border: 1px solid rgba(46, 204, 64, .25);
+    color: #5fff7f;
+  }
+  .toast.error {
+    background: rgba(255, 65, 54, .15);
+    border: 1px solid rgba(255, 65, 54, .25);
+    color: #ff6b6b;
+  }
+  .toast.removing {
+    animation: toastOut .3s ease-in forwards;
+  }
+  @keyframes toastOut {
+    to { opacity: 0; transform: translateX(30px); }
+  }
+
+  /* ── Nav links ── */
+  .nav-link {
+    color: rgba(255,255,255,.4);
+    text-decoration: none;
+    font-size: 13px;
+    transition: color .2s;
+  }
+  .nav-link:hover { color: rgba(255,255,255,.7); }
+
+  /* ── Confirm dialog ── */
+  .confirm-text {
+    color: rgba(255,255,255,.7);
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 8px;
+  }
+
+  /* ── Model rows ── */
+  .models-section label {
+    display: block;
+    color: rgba(255,255,255,.5);
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    margin-bottom: 8px;
+  }
+  .model-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 12px;
+    background: rgba(255,255,255,.03);
+    border: 1px solid rgba(255,255,255,.06);
+    border-radius: 10px;
+    margin-bottom: 8px;
+    position: relative;
+  }
+  .model-row .model-field { display: flex; flex-direction: column; gap: 3px; }
+  .model-row .model-field.full { grid-column: 1 / -1; }
+  .model-row .model-field span {
+    font-size: 10px;
+    color: rgba(255,255,255,.35);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+  }
+  .model-row input {
+    width: 100%;
+    height: 34px;
+    padding: 0 10px;
+    background: rgba(255,255,255,.05);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 8px;
+    color: #f0f0f0;
+    font-size: 13px;
+    outline: none;
+    transition: all .2s;
+  }
+  .model-row input:focus {
+    border-color: rgba(220,50,47,.5);
+    background: rgba(255,255,255,.07);
+    box-shadow: 0 0 0 2px rgba(220,50,47,.1);
+  }
+  .model-row input::placeholder { color: rgba(255,255,255,.18); }
+  .model-row-remove {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 22px;
+    height: 22px;
+    border: none;
+    border-radius: 6px;
+    background: rgba(255,65,54,.1);
+    color: #ff6b6b;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .2s;
+    line-height: 1;
+  }
+  .model-row-remove:hover { background: rgba(255,65,54,.25); }
+  .add-model-btn {
+    width: 100%;
+    height: 34px;
+    border: 1px dashed rgba(255,255,255,.12);
+    border-radius: 10px;
+    background: transparent;
+    color: rgba(255,255,255,.4);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .add-model-btn:hover { border-color: rgba(255,255,255,.25); color: rgba(255,255,255,.7); }
+
+  /* ── Language switcher ── */
+  .lang-sw {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 100;
+    display: flex;
+    gap: 2px;
+    background: rgba(18,18,24,.7);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,.06);
+    border-radius: 8px;
+    padding: 3px;
+  }
+  .lang-sw button {
+    padding: 4px 8px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: rgba(255,255,255,.35);
+    font-size: 11px;
+    cursor: pointer;
+    transition: all .2s;
+    font-family: inherit;
+  }
+  .lang-sw button:hover { color: rgba(255,255,255,.6); }
+  .lang-sw button.active {
+    background: rgba(255,255,255,.1);
+    color: #f0f0f0;
+  }
+</style>
+</head>
+<body>
+
+<div class="lang-sw" id="langSw"></div>
+
+<div class="container">
+  <div class="header">
+    <div class="logo-icon">🦞</div>
+    <h1>OpenClaw Admin</h1>
+    <p data-i18n="page_title"></p>
+  </div>
+
+  <div class="top-bar">
+    <div class="gateway-status">
+      <span class="status-dot" id="statusDot"></span>
+      <span id="statusText"></span>
+    </div>
+    <div class="top-actions">
+      <a href="/" id="btnBack" class="btn btn-secondary btn-sm nav-link" style="color:rgba(255,255,255,.7);text-decoration:none"></a>
+      <button class="btn btn-secondary btn-sm" id="btnRestart" onclick="restartGateway()"></button>
+      <button class="btn btn-primary btn-sm" id="btnAdd" onclick="showAddModal()"></button>
+    </div>
+  </div>
+
+  <div id="providerList"></div>
+</div>
+
+<div class="toast-container" id="toasts"></div>
+
+<script>
+// ── i18n ──
+const LANGS = {
+  'zh-CN': {
+    label: '简体',
+    page_title: 'API 密钥管理',
+    checking: '检查中...',
+    back: '返回应用',
+    restart: '重启网关',
+    add_provider: '+ 添加服务商',
+    gw_healthy: '网关: 运行中 (健康)',
+    gw_starting: '网关: 启动中...',
+    gw_prefix: '网关: ',
+    no_providers: '尚未配置服务商。点击「+ 添加服务商」开始。',
+    edit: '编辑',
+    delete_btn: '删除',
+    api_key: 'API 密钥',
+    base_url: '基础 URL',
+    api_type: 'API 类型',
+    models: '模型',
+    not_set: '(未设置)',
+    add_title: '添加服务商',
+    edit_prefix: '编辑: ',
+    template: '模板',
+    custom: '自定义',
+    provider_name: '服务商名称',
+    provider_name_ph: '例如 anthropic, openai, my-provider',
+    apikey_ph: 'sk-...',
+    apikey_keep_ph: '留空则保持当前密钥',
+    current: '当前: ',
+    base_url_ph: 'https://api.example.com/v1',
+    api_type_ph: '例如 openai-completions',
+    optional: '可选',
+    models_label: '模型',
+    model_id: '模型 ID',
+    model_id_ph: '例如 deepseek-ai/DeepSeek-V3',
+    display_name: '显示名称',
+    display_name_ph: '例如 DeepSeek-V3',
+    context_window: '上下文窗口',
+    max_tokens: '最大令牌数',
+    add_model: '+ 添加模型',
+    save_restart: '保存并重启',
+    cancel: '取消',
+    delete_title: '删除服务商',
+    delete_confirm_1: '确定要删除',
+    delete_confirm_2: '吗？这将移除其 API 密钥和配置，网关将重启。',
+    provider_required: '请输入服务商名称',
+    load_fail: '加载服务商失败: ',
+    save_fail: '保存失败: ',
+    delete_fail: '删除失败: ',
+    restart_fail: '重启失败: ',
+  },
+  'zh-TW': {
+    label: '繁體',
+    page_title: 'API 金鑰管理',
+    checking: '檢查中...',
+    back: '返回應用',
+    restart: '重啟閘道',
+    add_provider: '+ 新增服務商',
+    gw_healthy: '閘道: 運行中 (健康)',
+    gw_starting: '閘道: 啟動中...',
+    gw_prefix: '閘道: ',
+    no_providers: '尚未配置服務商。點擊「+ 新增服務商」開始。',
+    edit: '編輯',
+    delete_btn: '刪除',
+    api_key: 'API 金鑰',
+    base_url: '基礎 URL',
+    api_type: 'API 類型',
+    models: '模型',
+    not_set: '(未設定)',
+    add_title: '新增服務商',
+    edit_prefix: '編輯: ',
+    template: '範本',
+    custom: '自訂',
+    provider_name: '服務商名稱',
+    provider_name_ph: '例如 anthropic, openai, my-provider',
+    apikey_ph: 'sk-...',
+    apikey_keep_ph: '留空則保持目前金鑰',
+    current: '目前: ',
+    base_url_ph: 'https://api.example.com/v1',
+    api_type_ph: '例如 openai-completions',
+    optional: '可選',
+    models_label: '模型',
+    model_id: '模型 ID',
+    model_id_ph: '例如 deepseek-ai/DeepSeek-V3',
+    display_name: '顯示名稱',
+    display_name_ph: '例如 DeepSeek-V3',
+    context_window: '上下文視窗',
+    max_tokens: '最大權杖數',
+    add_model: '+ 新增模型',
+    save_restart: '儲存並重啟',
+    cancel: '取消',
+    delete_title: '刪除服務商',
+    delete_confirm_1: '確定要刪除',
+    delete_confirm_2: '嗎？這將移除其 API 金鑰和配置，閘道將重啟。',
+    provider_required: '請輸入服務商名稱',
+    load_fail: '載入服務商失敗: ',
+    save_fail: '儲存失敗: ',
+    delete_fail: '刪除失敗: ',
+    restart_fail: '重啟失敗: ',
+  },
+  en: {
+    label: 'EN',
+    page_title: 'API Key Management',
+    checking: 'Checking...',
+    back: 'Back to App',
+    restart: 'Restart Gateway',
+    add_provider: '+ Add Provider',
+    gw_healthy: 'Gateway: Running (Healthy)',
+    gw_starting: 'Gateway: Starting...',
+    gw_prefix: 'Gateway: ',
+    no_providers: 'No providers configured. Click "+ Add Provider" to get started.',
+    edit: 'Edit',
+    delete_btn: 'Delete',
+    api_key: 'API Key',
+    base_url: 'Base URL',
+    api_type: 'API Type',
+    models: 'Models',
+    not_set: '(not set)',
+    add_title: 'Add Provider',
+    edit_prefix: 'Edit: ',
+    template: 'Template',
+    custom: 'Custom',
+    provider_name: 'Provider Name',
+    provider_name_ph: 'e.g. anthropic, openai, my-provider',
+    apikey_ph: 'sk-...',
+    apikey_keep_ph: 'Leave empty to keep current key',
+    current: 'Current: ',
+    base_url_ph: 'https://api.example.com/v1',
+    api_type_ph: 'e.g. openai-completions',
+    optional: 'optional',
+    models_label: 'Models',
+    model_id: 'Model ID',
+    model_id_ph: 'e.g. deepseek-ai/DeepSeek-V3',
+    display_name: 'Display Name',
+    display_name_ph: 'e.g. DeepSeek-V3',
+    context_window: 'Context Window',
+    max_tokens: 'Max Tokens',
+    add_model: '+ Add Model',
+    save_restart: 'Save & Restart',
+    cancel: 'Cancel',
+    delete_title: 'Delete Provider',
+    delete_confirm_1: 'Are you sure you want to delete',
+    delete_confirm_2: '? This will remove its API key and configuration. The gateway will restart.',
+    provider_required: 'Provider name is required',
+    load_fail: 'Failed to load providers: ',
+    save_fail: 'Save failed: ',
+    delete_fail: 'Delete failed: ',
+    restart_fail: 'Restart failed: ',
+  },
+  ja: {
+    label: '日本語',
+    page_title: 'API\u30AD\u30FC\u7BA1\u7406',
+    checking: '\u78BA\u8A8D\u4E2D...',
+    back: '\u30A2\u30D7\u30EA\u306B\u623B\u308B',
+    restart: '\u30B2\u30FC\u30C8\u30A6\u30A7\u30A4\u3092\u518D\u8D77\u52D5',
+    add_provider: '+ \u30D7\u30ED\u30D0\u30A4\u30C0\u30FC\u3092\u8FFD\u52A0',
+    gw_healthy: '\u30B2\u30FC\u30C8\u30A6\u30A7\u30A4: \u7A3C\u50CD\u4E2D (\u6B63\u5E38)',
+    gw_starting: '\u30B2\u30FC\u30C8\u30A6\u30A7\u30A4: \u8D77\u52D5\u4E2D...',
+    gw_prefix: '\u30B2\u30FC\u30C8\u30A6\u30A7\u30A4: ',
+    no_providers: '\u30D7\u30ED\u30D0\u30A4\u30C0\u30FC\u304C\u8A2D\u5B9A\u3055\u308C\u3066\u3044\u307E\u305B\u3093\u3002\u300C+ \u30D7\u30ED\u30D0\u30A4\u30C0\u30FC\u3092\u8FFD\u52A0\u300D\u3092\u30AF\u30EA\u30C3\u30AF\u3057\u3066\u304F\u3060\u3055\u3044\u3002',
+    edit: '\u7DE8\u96C6',
+    delete_btn: '\u524A\u9664',
+    api_key: 'API\u30AD\u30FC',
+    base_url: '\u30D9\u30FC\u30B9URL',
+    api_type: 'API\u30BF\u30A4\u30D7',
+    models: '\u30E2\u30C7\u30EB',
+    not_set: '(\u672A\u8A2D\u5B9A)',
+    add_title: '\u30D7\u30ED\u30D0\u30A4\u30C0\u30FC\u3092\u8FFD\u52A0',
+    edit_prefix: '\u7DE8\u96C6: ',
+    template: '\u30C6\u30F3\u30D7\u30EC\u30FC\u30C8',
+    custom: '\u30AB\u30B9\u30BF\u30E0',
+    provider_name: '\u30D7\u30ED\u30D0\u30A4\u30C0\u30FC\u540D',
+    provider_name_ph: '\u4F8B: anthropic, openai, my-provider',
+    apikey_ph: 'sk-...',
+    apikey_keep_ph: '\u7A7A\u6B04\u3067\u73FE\u5728\u306E\u30AD\u30FC\u3092\u4FDD\u6301',
+    current: '\u73FE\u5728: ',
+    base_url_ph: 'https://api.example.com/v1',
+    api_type_ph: '\u4F8B: openai-completions',
+    optional: '\u4EFB\u610F',
+    models_label: '\u30E2\u30C7\u30EB',
+    model_id: '\u30E2\u30C7\u30EBID',
+    model_id_ph: '\u4F8B: deepseek-ai/DeepSeek-V3',
+    display_name: '\u8868\u793A\u540D',
+    display_name_ph: '\u4F8B: DeepSeek-V3',
+    context_window: '\u30B3\u30F3\u30C6\u30AD\u30B9\u30C8\u30A6\u30A3\u30F3\u30C9\u30A6',
+    max_tokens: '\u6700\u5927\u30C8\u30FC\u30AF\u30F3\u6570',
+    add_model: '+ \u30E2\u30C7\u30EB\u3092\u8FFD\u52A0',
+    save_restart: '\u4FDD\u5B58\u3057\u3066\u518D\u8D77\u52D5',
+    cancel: '\u30AD\u30E3\u30F3\u30BB\u30EB',
+    delete_title: '\u30D7\u30ED\u30D0\u30A4\u30C0\u30FC\u3092\u524A\u9664',
+    delete_confirm_1: '',
+    delete_confirm_2: ' \u3092\u524A\u9664\u3057\u3066\u3082\u3088\u308D\u3057\u3044\u3067\u3059\u304B\uFF1FAPI\u30AD\u30FC\u3068\u8A2D\u5B9A\u304C\u524A\u9664\u3055\u308C\u3001\u30B2\u30FC\u30C8\u30A6\u30A7\u30A4\u304C\u518D\u8D77\u52D5\u3055\u308C\u307E\u3059\u3002',
+    provider_required: '\u30D7\u30ED\u30D0\u30A4\u30C0\u30FC\u540D\u3092\u5165\u529B\u3057\u3066\u304F\u3060\u3055\u3044',
+    load_fail: '\u30D7\u30ED\u30D0\u30A4\u30C0\u30FC\u306E\u8AAD\u307F\u8FBC\u307F\u306B\u5931\u6557: ',
+    save_fail: '\u4FDD\u5B58\u306B\u5931\u6557: ',
+    delete_fail: '\u524A\u9664\u306B\u5931\u6557: ',
+    restart_fail: '\u518D\u8D77\u52D5\u306B\u5931\u6557: ',
+  },
+};
+
+let curLang = localStorage.getItem('oc_lang') || 'zh-CN';
+if (!LANGS[curLang]) curLang = 'zh-CN';
+
+function t(key) { return LANGS[curLang][key] || key; }
+
+function buildLangSwitcher() {
+  document.getElementById('langSw').innerHTML = Object.entries(LANGS).map(([k, v]) =>
+    `<button class="${k === curLang ? 'active' : ''}" onclick="setLang('${k}')">${v.label}</button>`
+  ).join('');
+}
+
+function applyStaticI18n() {
+  document.documentElement.lang = curLang;
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    el.textContent = t(el.dataset.i18n);
+  });
+  const gwToken = localStorage.getItem('oc_gw_token') || '';
+  const backEl = document.getElementById('btnBack');
+  backEl.textContent = t('back');
+  backEl.href = gwToken ? '/#token=' + gwToken : '/';
+  document.getElementById('btnRestart').textContent = t('restart');
+  document.getElementById('btnAdd').textContent = t('add_provider');
+  document.getElementById('statusText').textContent = t('checking');
+}
+
+function setLang(lang) {
+  curLang = lang;
+  localStorage.setItem('oc_lang', lang);
+  buildLangSwitcher();
+  applyStaticI18n();
+  renderProviders();
+  // re-apply gateway status text
+  if (lastGw) updateGatewayStatus(lastGw);
+}
+
+let lastGw = null;
+
+const API = '/admin/api';
+let providers = {};
+let templates = {};
+
+// ── Toast ──
+function toast(msg, type = 'success') {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(() => {
+    el.classList.add('removing');
+    setTimeout(() => el.remove(), 300);
+  }, 3500);
+}
+
+// ── API ──
+async function fetchKeys() {
+  try {
+    const res = await fetch(`${API}/keys`, { credentials: 'same-origin' });
+    if (res.status === 401) { window.location.href = '/login'; return; }
+    const data = await res.json();
+    providers = data.providers || {};
+    templates = data.templates || {};
+    updateGatewayStatus(data.gateway);
+    renderProviders();
+  } catch (e) {
+    toast(t('load_fail') + e.message, 'error');
+  }
+}
+
+async function saveProvider(name, config) {
+  try {
+    const res = await fetch(`${API}/keys`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ provider: name, config }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    toast(data.message);
+    fetchKeys();
+  } catch (e) {
+    toast(t('save_fail') + e.message, 'error');
+  }
+}
+
+async function deleteProvider(name) {
+  try {
+    const res = await fetch(`${API}/keys/${encodeURIComponent(name)}`, {
+      method: 'DELETE',
+      credentials: 'same-origin',
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    toast(data.message);
+    fetchKeys();
+  } catch (e) {
+    toast(t('delete_fail') + e.message, 'error');
+  }
+}
+
+async function restartGateway() {
+  try {
+    const res = await fetch(`${API}/restart`, {
+      method: 'POST',
+      credentials: 'same-origin',
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    toast(data.message);
+    setTimeout(pollStatus, 3000);
+  } catch (e) {
+    toast(t('restart_fail') + e.message, 'error');
+  }
+}
+
+async function pollStatus() {
+  try {
+    const res = await fetch(`${API}/status`, { credentials: 'same-origin' });
+    const data = await res.json();
+    updateGatewayStatus(data.gateway);
+  } catch {}
+}
+
+function updateGatewayStatus(gw) {
+  if (!gw) return;
+  lastGw = gw;
+  const dot = document.getElementById('statusDot');
+  const text = document.getElementById('statusText');
+  dot.className = 'status-dot';
+  if (gw.status === 'running' && gw.health === 'healthy') {
+    dot.classList.add('running');
+    text.textContent = t('gw_healthy');
+  } else if (gw.status === 'running') {
+    dot.classList.add('starting');
+    text.textContent = t('gw_starting');
+    setTimeout(pollStatus, 5000);
+  } else {
+    dot.classList.add('stopped');
+    text.textContent = t('gw_prefix') + gw.status;
+  }
+}
+
+// ── Render ──
+function renderProviders() {
+  const list = document.getElementById('providerList');
+  const names = Object.keys(providers);
+
+  if (names.length === 0) {
+    list.innerHTML = `<div class="card"><div class="empty-state">${esc(t('no_providers'))}</div></div>`;
+    return;
+  }
+
+  list.innerHTML = names.map((name, i) => {
+    const p = providers[name];
+    const fields = [];
+    fields.push(`<div class="card-field"><div class="card-label">${esc(t('api_key'))}</div><div class="card-value">${esc(p.apiKey || t('not_set'))}</div></div>`);
+    if (p.baseUrl) fields.push(`<div class="card-field"><div class="card-label">${esc(t('base_url'))}</div><div class="card-value">${esc(p.baseUrl)}</div></div>`);
+    if (p.api) fields.push(`<div class="card-field"><div class="card-label">${esc(t('api_type'))}</div><div class="card-value">${esc(p.api)}</div></div>`);
+    if (p.models && p.models.length > 0) {
+      const modelNames = p.models.map(m => m.name || m.id).join(', ');
+      fields.push(`<div class="card-field"><div class="card-label">${esc(t('models'))} (${p.models.length})</div><div class="card-value">${esc(modelNames)}</div></div>`);
+    }
+
+    return `<div class="card" style="animation-delay:${i * .05}s">
+      <div class="card-header">
+        <h3>${esc(name)}</h3>
+        <div class="card-actions">
+          <button class="btn btn-secondary btn-sm" onclick="showEditModal('${esc(name)}')">${esc(t('edit'))}</button>
+          <button class="btn btn-danger btn-sm" onclick="showDeleteConfirm('${esc(name)}')">${esc(t('delete_btn'))}</button>
+        </div>
+      </div>
+      ${fields.join('')}
+    </div>`;
+  }).join('');
+}
+
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+// ── Model rows ──
+function modelRowHTML(m) {
+  m = m || { id: '', name: '', contextWindow: 65536, maxTokens: 8192 };
+  return `<div class="model-row">
+    <button type="button" class="model-row-remove" onclick="this.parentElement.remove()">&times;</button>
+    <div class="model-field full">
+      <span>${esc(t('model_id'))}</span>
+      <input class="mr-id" value="${esc(m.id || '')}" placeholder="${esc(t('model_id_ph'))}">
+    </div>
+    <div class="model-field full">
+      <span>${esc(t('display_name'))}</span>
+      <input class="mr-name" value="${esc(m.name || '')}" placeholder="${esc(t('display_name_ph'))}">
+    </div>
+    <div class="model-field">
+      <span>${esc(t('context_window'))}</span>
+      <input class="mr-ctx" type="number" value="${m.contextWindow || 65536}">
+    </div>
+    <div class="model-field">
+      <span>${esc(t('max_tokens'))}</span>
+      <input class="mr-max" type="number" value="${m.maxTokens || 8192}">
+    </div>
+  </div>`;
+}
+
+function addModelRow() {
+  document.getElementById('m_model_list').insertAdjacentHTML('beforeend', modelRowHTML());
+}
+
+function collectModels() {
+  const rows = document.querySelectorAll('#m_model_list .model-row');
+  if (rows.length === 0) return null;
+  const models = [];
+  for (const row of rows) {
+    const id = row.querySelector('.mr-id').value.trim();
+    if (!id) continue;
+    models.push({
+      id,
+      name: row.querySelector('.mr-name').value.trim() || id,
+      contextWindow: parseInt(row.querySelector('.mr-ctx').value) || 65536,
+      maxTokens: parseInt(row.querySelector('.mr-max').value) || 8192,
+    });
+  }
+  return models.length > 0 ? models : null;
+}
+
+function modelsSection(models) {
+  const rows = (models || []).map(m => modelRowHTML(m)).join('');
+  return `<div class="models-section">
+    <label>${esc(t('models_label'))} <span style="opacity:.5">(${esc(t('optional'))})</span></label>
+    <div id="m_model_list">${rows}</div>
+    <button type="button" class="add-model-btn" onclick="addModelRow()">${esc(t('add_model'))}</button>
+  </div>`;
+}
+
+// ── Modals ──
+function closeModal() {
+  const overlay = document.querySelector('.modal-overlay');
+  if (overlay) overlay.remove();
+}
+
+function showAddModal() {
+  const templateOptions = Object.keys(templates).map(tpl =>
+    `<option value="${tpl}">${tpl.charAt(0).toUpperCase() + tpl.slice(1)}</option>`
+  ).join('');
+
+  const html = `<div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <h2>${esc(t('add_title'))}</h2>
+      <div class="field">
+        <label>${esc(t('template'))}</label>
+        <select id="m_template" onchange="applyTemplate()">
+          <option value="">${esc(t('custom'))}</option>
+          ${templateOptions}
+        </select>
+      </div>
+      <div class="field">
+        <label>${esc(t('provider_name'))}</label>
+        <input id="m_name" placeholder="${esc(t('provider_name_ph'))}">
+      </div>
+      <div class="field">
+        <label>${esc(t('api_key'))}</label>
+        <input id="m_apikey" type="password" placeholder="${esc(t('apikey_ph'))}">
+      </div>
+      <div class="field">
+        <label>${esc(t('base_url'))} <span style="opacity:.5">(${esc(t('optional'))})</span></label>
+        <input id="m_baseurl" placeholder="${esc(t('base_url_ph'))}">
+      </div>
+      <div class="field">
+        <label>${esc(t('api_type'))} <span style="opacity:.5">(${esc(t('optional'))})</span></label>
+        <input id="m_api" placeholder="${esc(t('api_type_ph'))}">
+      </div>
+      ${modelsSection([])}
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal()">${esc(t('cancel'))}</button>
+        <button class="btn btn-primary" onclick="submitAdd()">${esc(t('save_restart'))}</button>
+      </div>
+    </div>
+  </div>`;
+  document.body.insertAdjacentHTML('beforeend', html);
+}
+
+function applyTemplate() {
+  const tpl = document.getElementById('m_template').value;
+  if (!tpl) return;
+  document.getElementById('m_name').value = tpl;
+  const tmpl = templates[tpl] || {};
+  document.getElementById('m_baseurl').value = tmpl.baseUrl || '';
+  document.getElementById('m_api').value = tmpl.api || '';
+  const list = document.getElementById('m_model_list');
+  list.innerHTML = '';
+  if (tmpl.models && tmpl.models.length > 0) {
+    tmpl.models.forEach(m => { list.insertAdjacentHTML('beforeend', modelRowHTML(m)); });
+  }
+}
+
+function submitAdd() {
+  const name = document.getElementById('m_name').value.trim();
+  if (!name) { toast(t('provider_required'), 'error'); return; }
+
+  const config = {};
+  const apiKey = document.getElementById('m_apikey').value.trim();
+  if (apiKey) config.apiKey = apiKey;
+
+  const baseUrl = document.getElementById('m_baseurl').value.trim();
+  if (baseUrl) config.baseUrl = baseUrl;
+
+  const api = document.getElementById('m_api').value.trim();
+  if (api) config.api = api;
+
+  const models = collectModels();
+  if (models) config.models = models;
+
+  closeModal();
+  saveProvider(name, config);
+}
+
+function showEditModal(name) {
+  const p = providers[name] || {};
+
+  const html = `<div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <h2>${esc(t('edit_prefix'))}${esc(name)}</h2>
+      <div class="field">
+        <label>${esc(t('api_key'))}</label>
+        <input id="m_apikey" type="password" placeholder="${esc(t('apikey_keep_ph'))}">
+        <div class="hint">${esc(t('current'))}${esc(p.apiKey || t('not_set'))}</div>
+      </div>
+      <div class="field">
+        <label>${esc(t('base_url'))} <span style="opacity:.5">(${esc(t('optional'))})</span></label>
+        <input id="m_baseurl" value="${esc(p.baseUrl || '')}">
+      </div>
+      <div class="field">
+        <label>${esc(t('api_type'))} <span style="opacity:.5">(${esc(t('optional'))})</span></label>
+        <input id="m_api" value="${esc(p.api || '')}">
+      </div>
+      ${modelsSection(p.models || [])}
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal()">${esc(t('cancel'))}</button>
+        <button class="btn btn-primary" onclick="submitEdit('${esc(name)}')">${esc(t('save_restart'))}</button>
+      </div>
+    </div>
+  </div>`;
+  document.body.insertAdjacentHTML('beforeend', html);
+}
+
+function submitEdit(name) {
+  const config = {};
+  const apiKey = document.getElementById('m_apikey').value.trim();
+  if (apiKey) config.apiKey = apiKey;
+
+  const baseUrl = document.getElementById('m_baseurl').value.trim();
+  if (baseUrl) config.baseUrl = baseUrl;
+
+  const api = document.getElementById('m_api').value.trim();
+  if (api) config.api = api;
+
+  const models = collectModels();
+  if (models) config.models = models;
+
+  closeModal();
+  saveProvider(name, config);
+}
+
+function showDeleteConfirm(name) {
+  const html = `<div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <h2>${esc(t('delete_title'))}</h2>
+      <p class="confirm-text">${esc(t('delete_confirm_1'))} <strong>${esc(name)}</strong>${esc(t('delete_confirm_2'))}</p>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal()">${esc(t('cancel'))}</button>
+        <button class="btn btn-danger" onclick="closeModal();deleteProvider('${esc(name)}')">${esc(t('delete_btn'))}</button>
+      </div>
+    </div>
+  </div>`;
+  document.body.insertAdjacentHTML('beforeend', html);
+}
+
+// ── Init ──
+buildLangSwitcher();
+applyStaticI18n();
+fetchKeys();
+setInterval(pollStatus, 30000);
+</script>
+</body>
+</html>

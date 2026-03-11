@@ -3,5 +3,4 @@ nginx/.htpasswd
 data/config/*
 data/workspace/*
 !data/config/.gitkeep
-!data/config/openclaw.json
 !data/workspace/.gitkeep
