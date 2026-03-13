@@ -13,6 +13,8 @@ services:
     depends_on:
       openclaw-gateway:
         condition: service_healthy
+      openclaw-channels:
+        condition: service_healthy
     restart: unless-stopped
 
   openclaw-gateway:
@@ -61,6 +63,27 @@ services:
       retries: 3
       start_period: 5s
 
+  openclaw-channels:
+    image: node:22-alpine
+    container_name: openclaw-channels
+    working_dir: /srv
+    volumes:
+      - ./channels:/src:ro
+      - channels_modules:/srv/node_modules
+      - ./data/config:/config
+    environment:
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      SILICONFLOW_API_KEY: ${SILICONFLOW_API_KEY:-}
+    command: ["sh", "-c", "cp /src/package.json /srv/ && cp /src/server.js /srv/ && npm install --omit=dev --no-fund --no-audit 2>&1 && node server.js"]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3457/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
   openclaw-cli:
     image: ghcr.io/openclaw/openclaw:latest
     container_name: openclaw-cli
@@ -80,3 +103,6 @@ services:
     init: true
     entrypoint: ["node", "dist/index.js"]
     profiles: [cli]
+
+volumes:
+  channels_modules:

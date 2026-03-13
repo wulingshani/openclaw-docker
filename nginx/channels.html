@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- OpenClaw Channels Panel | Author: wulingshan | https://github.com/wulingshani/openclaw-docker -->
+<title>OpenClaw Channels</title>
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #0a0a0f;
+    color: #f0f0f0;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 80%, rgba(59, 130, 246, .12), transparent),
+      radial-gradient(ellipse 60% 80% at 80% 20%, rgba(139, 92, 246, .10), transparent),
+      radial-gradient(ellipse 50% 50% at 50% 50%, rgba(99, 102, 241, .06), transparent);
+    animation: bgShift 12s ease-in-out infinite alternate;
+    z-index: -1;
+  }
+  @keyframes bgShift {
+    0%   { opacity: .6; transform: scale(1); }
+    100% { opacity: 1;  transform: scale(1.1); }
+  }
+
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 40px 20px 60px;
+  }
+
+  /* ── Header ── */
+  .header {
+    text-align: center;
+    margin-bottom: 36px;
+    animation: cardIn .6s cubic-bezier(.16, 1, .3, 1) both;
+  }
+  .header .logo-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    font-size: 28px;
+    margin-bottom: 12px;
+    box-shadow: 0 8px 32px rgba(59, 130, 246, .3);
+  }
+  .header h1 { font-size: 22px; font-weight: 600; letter-spacing: -.3px; }
+  .header p { color: rgba(255,255,255,.35); font-size: 13px; margin-top: 4px; }
+
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(20px) scale(.97); }
+  }
+
+  /* ── Top bar ── */
+  .top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    gap: 12px;
+    flex-wrap: wrap;
+    animation: cardIn .6s .1s cubic-bezier(.16, 1, .3, 1) both;
+  }
+
+  .top-nav {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+  }
+  .top-actions { display: flex; gap: 8px; }
+
+  /* ── Buttons ── */
+  .btn {
+    height: 36px;
+    padding: 0 16px;
+    border: none;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+  .btn:hover:not(:disabled) { transform: translateY(-1px); }
+  .btn:active:not(:disabled) { transform: translateY(0); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    color: #fff;
+  }
+  .btn-primary:hover:not(:disabled) { box-shadow: 0 4px 16px rgba(59,130,246,.35); }
+
+  .btn-secondary {
+    background: rgba(255,255,255,.08);
+    color: rgba(255,255,255,.7);
+    border: 1px solid rgba(255,255,255,.08);
+  }
+  .btn-secondary:hover:not(:disabled) { background: rgba(255,255,255,.12); color: #fff; }
+
+  .btn-danger {
+    background: rgba(255,65,54,.1);
+    color: #ff6b6b;
+    border: 1px solid rgba(255,65,54,.15);
+  }
+  .btn-danger:hover:not(:disabled) { background: rgba(255,65,54,.2); }
+
+  .btn-success {
+    background: rgba(46,204,64,.1);
+    color: #5fff7f;
+    border: 1px solid rgba(46,204,64,.15);
+  }
+  .btn-success:hover:not(:disabled) { background: rgba(46,204,64,.2); }
+
+  .btn-sm { height: 30px; padding: 0 10px; font-size: 12px; border-radius: 8px; }
+
+  /* ── Nav links ── */
+  .nav-link {
+    color: rgba(255,255,255,.4);
+    text-decoration: none;
+    font-size: 13px;
+    transition: color .2s;
+  }
+  .nav-link:hover { color: rgba(255,255,255,.7); }
+
+  /* ── Cards ── */
+  .card {
+    background: rgba(18, 18, 24, .85);
+    backdrop-filter: blur(40px);
+    border: 1px solid rgba(255, 255, 255, .06);
+    border-radius: 16px;
+    padding: 20px 24px;
+    margin-bottom: 12px;
+    box-shadow: 0 0 0 1px rgba(255,255,255,.03), 0 8px 32px rgba(0,0,0,.3);
+    animation: cardIn .5s cubic-bezier(.16, 1, .3, 1) both;
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .card-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .card-title h3 { font-size: 16px; font-weight: 600; }
+  .card-title .platform-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .card-actions { display: flex; gap: 6px; }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .3px;
+  }
+  .status-badge.enabled {
+    background: rgba(46,204,64,.12);
+    color: #5fff7f;
+  }
+  .status-badge.disabled {
+    background: rgba(255,255,255,.06);
+    color: rgba(255,255,255,.35);
+  }
+  .status-badge .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+  .status-badge.enabled .dot { background: #2ecc40; box-shadow: 0 0 6px rgba(46,204,64,.5); }
+  .status-badge.disabled .dot { background: #666; }
+
+  .card-field {
+    margin-bottom: 8px;
+  }
+  .card-field:last-child { margin-bottom: 0; }
+  .card-label {
+    font-size: 11px;
+    color: rgba(255,255,255,.4);
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    margin-bottom: 2px;
+  }
+  .card-value {
+    font-size: 14px;
+    color: rgba(255,255,255,.7);
+    font-family: 'SF Mono', Menlo, Consolas, monospace;
+    word-break: break-all;
+  }
+
+  .webhook-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 10px 14px;
+    background: rgba(255,255,255,.03);
+    border: 1px solid rgba(255,255,255,.06);
+    border-radius: 10px;
+  }
+  .webhook-row .card-value {
+    flex: 1;
+    font-size: 12px;
+    color: rgba(255,255,255,.5);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .webhook-row .copy-btn {
+    padding: 4px 10px;
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 6px;
+    background: rgba(255,255,255,.05);
+    color: rgba(255,255,255,.5);
+    font-size: 11px;
+    cursor: pointer;
+    transition: all .2s;
+    white-space: nowrap;
+    font-family: inherit;
+  }
+  .webhook-row .copy-btn:hover { background: rgba(255,255,255,.1); color: #fff; }
+
+  .empty-state {
+    text-align: center;
+    padding: 48px 20px;
+    color: rgba(255,255,255,.3);
+    font-size: 14px;
+  }
+
+  /* ── Modal ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn .2s;
+    padding: 20px;
+  }
+  @keyframes fadeIn { from { opacity: 0; } }
+
+  .modal {
+    width: 100%;
+    max-width: 520px;
+    max-height: 90vh;
+    overflow-y: auto;
+    background: rgba(22, 22, 30, .95);
+    backdrop-filter: blur(40px);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 20px;
+    padding: 32px;
+    box-shadow: 0 24px 80px rgba(0,0,0,.6);
+    animation: modalIn .3s cubic-bezier(.16, 1, .3, 1) both;
+  }
+  @keyframes modalIn {
+    from { opacity: 0; transform: translateY(20px) scale(.95); }
+  }
+  .modal h2 { font-size: 18px; margin-bottom: 24px; }
+
+  .field { margin-bottom: 16px; }
+  .field label {
+    display: block;
+    color: rgba(255,255,255,.5);
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    margin-bottom: 6px;
+  }
+  .field input, .field select, .field textarea {
+    width: 100%;
+    height: 42px;
+    padding: 0 14px;
+    background: rgba(255,255,255,.05);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 10px;
+    color: #f0f0f0;
+    font-size: 14px;
+    outline: none;
+    transition: all .2s;
+    font-family: inherit;
+  }
+  .field textarea {
+    height: 80px;
+    padding: 10px 14px;
+    resize: vertical;
+    font-size: 13px;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus {
+    border-color: rgba(59,130,246,.5);
+    background: rgba(255,255,255,.07);
+    box-shadow: 0 0 0 3px rgba(59,130,246,.1);
+  }
+  .field input::placeholder, .field textarea::placeholder { color: rgba(255,255,255,.2); }
+  .field select { cursor: pointer; appearance: none; }
+  .field .hint {
+    font-size: 11px;
+    color: rgba(255,255,255,.3);
+    margin-top: 4px;
+  }
+  .field .required-star { color: #ff6b6b; }
+
+  /* ── Platform selector ── */
+  .platform-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .platform-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 12px 4px;
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 12px;
+    background: rgba(255,255,255,.03);
+    cursor: pointer;
+    transition: all .2s;
+    font-family: inherit;
+    color: rgba(255,255,255,.6);
+    font-size: 11px;
+  }
+  .platform-option:hover { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.15); color: #fff; }
+  .platform-option.selected {
+    background: rgba(59,130,246,.12);
+    border-color: rgba(59,130,246,.4);
+    color: #fff;
+    box-shadow: 0 0 0 2px rgba(59,130,246,.15);
+  }
+  .platform-option .p-icon { font-size: 22px; }
+  .platform-option .p-name { font-weight: 500; white-space: nowrap; }
+
+  .dynamic-fields { margin-top: 16px; }
+
+  .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 24px;
+  }
+
+  /* ── Toggle switch ── */
+  .toggle-sw {
+    position: relative;
+    width: 40px;
+    height: 22px;
+    border: none;
+    border-radius: 11px;
+    background: rgba(255,255,255,.15);
+    cursor: pointer;
+    transition: background .2s;
+    padding: 0;
+  }
+  .toggle-sw.on { background: #3b82f6; }
+  .toggle-sw::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    transition: transform .2s;
+  }
+  .toggle-sw.on::after { transform: translateX(18px); }
+
+  /* ── Toast ── */
+  .toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .toast {
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: 0 8px 32px rgba(0,0,0,.4);
+    animation: toastIn .3s cubic-bezier(.16, 1, .3, 1) both;
+    max-width: 360px;
+  }
+  @keyframes toastIn { from { opacity: 0; transform: translateX(30px); } }
+  .toast.success {
+    background: rgba(46, 204, 64, .15);
+    border: 1px solid rgba(46, 204, 64, .25);
+    color: #5fff7f;
+  }
+  .toast.error {
+    background: rgba(255, 65, 54, .15);
+    border: 1px solid rgba(255, 65, 54, .25);
+    color: #ff6b6b;
+  }
+  .toast.removing { animation: toastOut .3s ease-in forwards; }
+  @keyframes toastOut { to { opacity: 0; transform: translateX(30px); } }
+
+  /* ── Confirm dialog ── */
+  .confirm-text {
+    color: rgba(255,255,255,.7);
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 8px;
+  }
+
+  /* ── Language switcher ── */
+  .lang-sw {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 100;
+    display: flex;
+    gap: 2px;
+    background: rgba(18,18,24,.7);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,.06);
+    border-radius: 8px;
+    padding: 3px;
+  }
+  .lang-sw button {
+    padding: 4px 8px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: rgba(255,255,255,.35);
+    font-size: 11px;
+    cursor: pointer;
+    transition: all .2s;
+    font-family: inherit;
+  }
+  .lang-sw button:hover { color: rgba(255,255,255,.6); }
+  .lang-sw button.active {
+    background: rgba(255,255,255,.1);
+    color: #f0f0f0;
+  }
+  .footer {
+    text-align: center;
+    padding: 24px 0 16px;
+    color: rgba(255, 255, 255, .2);
+    font-size: 12px;
+  }
+  .footer a {
+    color: rgba(255, 255, 255, .35);
+    text-decoration: none;
+    transition: color .2s;
+  }
+  .footer a:hover { color: rgba(255, 255, 255, .6); }
+</style>
+</head>
+<body>
+
+<div class="lang-sw" id="langSw"></div>
+
+<div class="container">
+  <div class="header">
+    <div class="logo-icon">🔗</div>
+    <h1>OpenClaw Channels</h1>
+    <p data-i18n="page_subtitle"></p>
+  </div>
+
+  <div class="top-bar">
+    <div class="top-nav">
+      <a href="/" id="btnBack" class="btn btn-secondary btn-sm nav-link" style="color:rgba(255,255,255,.7);text-decoration:none"></a>
+      <a href="/admin" class="btn btn-secondary btn-sm nav-link" style="color:rgba(255,255,255,.7);text-decoration:none" data-i18n="nav_admin"></a>
+    </div>
+    <div class="top-actions">
+      <button class="btn btn-primary btn-sm" id="btnAdd" onclick="showAddModal()"></button>
+    </div>
+  </div>
+
+  <div id="channelList"></div>
+  <div class="footer" id="footer"></div>
+</div>
+
+<div class="toast-container" id="toasts"></div>
+
+<script>
+// ── Platform metadata ──
+const PLATFORM_META = {
+  feishu:   { icon: '📱', bg: 'linear-gradient(135deg, #3370ff, #2b5bdb)' },
+  dingtalk: { icon: '💬', bg: 'linear-gradient(135deg, #0089ff, #006bd6)' },
+  wechat:   { icon: '💚', bg: 'linear-gradient(135deg, #07c160, #06ad56)' },
+  wework:   { icon: '🏢', bg: 'linear-gradient(135deg, #2dab56, #1e8a42)' },
+  qq:       { icon: '🐧', bg: 'linear-gradient(135deg, #12b7f5, #0d96d6)' },
+  telegram: { icon: '✈️', bg: 'linear-gradient(135deg, #2aabee, #229ed9)' },
+  discord:  { icon: '🎮', bg: 'linear-gradient(135deg, #5865f2, #4752c4)' },
+  slack:    { icon: '📨', bg: 'linear-gradient(135deg, #e01e5a, #36c5f0)' },
+};
+
+// ── i18n ──
+const LANGS = {
+  'zh-CN': {
+    label: '简体',
+    page_subtitle: '对接飞书、QQ、微信等消息平台',
+    back: '返回应用',
+    nav_admin: 'API 管理',
+    add_channel: '+ 添加渠道',
+    no_channels: '尚未配置消息渠道。点击「+ 添加渠道」开始。',
+    enabled: '已启用',
+    disabled: '已禁用',
+    edit: '编辑',
+    delete_btn: '删除',
+    webhook_url: 'Webhook URL',
+    copy: '复制',
+    copied: '已复制!',
+    system_prompt: '系统提示词',
+    not_set: '(未设置)',
+    add_title: '添加渠道',
+    edit_title: '编辑渠道',
+    channel_name: '渠道名称',
+    channel_name_ph: '例如 my-feishu-bot',
+    platform: '选择平台',
+    sys_prompt_label: '系统提示词',
+    sys_prompt_ph: '例如：你是一个专业的客服助手，请用简洁友好的语气回答用户问题',
+    sys_prompt_tip: '设定 AI 的角色和行为规则。例如可以让它扮演客服、翻译官、编程助手等。留空则使用默认通用助手。',
+    optional: '可选',
+    save: '保存',
+    cancel: '取消',
+    delete_title: '删除渠道',
+    delete_confirm_1: '确定要删除渠道',
+    delete_confirm_2: '吗？此操作不可撤销。',
+    name_required: '请输入渠道名称',
+    platform_required: '请选择平台',
+    field_required: '请填写必填字段: ',
+    load_fail: '加载失败: ',
+    save_ok: '渠道已保存',
+    save_fail: '保存失败: ',
+    delete_fail: '删除失败: ',
+    // Platform names
+    p_feishu: '飞书',
+    p_dingtalk: '钉钉',
+    p_wechat: '微信公众号',
+    p_wework: '企业微信',
+    p_qq: 'QQ',
+    p_telegram: 'Telegram',
+    p_discord: 'Discord',
+    p_slack: 'Slack',
+    // Field labels
+    f_appId: 'App ID',
+    f_appSecret: 'App Secret',
+    f_appKey: 'App Key',
+    f_verificationToken: '验证令牌',
+    f_encryptKey: '加密密钥',
+    f_token: 'Token',
+    f_encodingAESKey: 'Encoding AES Key',
+    f_corpId: 'Corp ID',
+    f_agentId: 'Agent ID',
+    f_secret: 'Secret',
+    f_robotCode: 'Robot Code',
+    f_outgoingToken: 'Outgoing Token',
+    f_sandbox: '沙箱模式',
+    f_botToken: 'Bot Token',
+    f_webhookSecret: 'Webhook Secret',
+    f_applicationId: 'Application ID',
+    f_publicKey: 'Public Key',
+    f_signingSecret: 'Signing Secret',
+    f_appToken: 'App Token',
+  },
+  'zh-TW': {
+    label: '繁體',
+    page_subtitle: '對接飛書、QQ、微信等訊息平台',
+    back: '返回應用',
+    nav_admin: 'API 管理',
+    add_channel: '+ 新增渠道',
+    no_channels: '尚未配置訊息渠道。點擊「+ 新增渠道」開始。',
+    enabled: '已啟用',
+    disabled: '已停用',
+    edit: '編輯',
+    delete_btn: '刪除',
+    webhook_url: 'Webhook URL',
+    copy: '複製',
+    copied: '已複製!',
+    system_prompt: '系統提示詞',
+    not_set: '(未設定)',
+    add_title: '新增渠道',
+    edit_title: '編輯渠道',
+    channel_name: '渠道名稱',
+    channel_name_ph: '例如 my-feishu-bot',
+    platform: '選擇平台',
+    sys_prompt_label: '系統提示詞',
+    sys_prompt_ph: '例如：你是一個專業的客服助手，請用簡潔友好的語氣回答用戶問題',
+    sys_prompt_tip: '設定 AI 的角色和行為規則。例如可以讓它扮演客服、翻譯官、程式助手等。留空則使用預設通用助手。',
+    optional: '可選',
+    save: '儲存',
+    cancel: '取消',
+    delete_title: '刪除渠道',
+    delete_confirm_1: '確定要刪除渠道',
+    delete_confirm_2: '嗎？此操作不可撤銷。',
+    name_required: '請輸入渠道名稱',
+    platform_required: '請選擇平台',
+    field_required: '請填寫必填欄位: ',
+    load_fail: '載入失敗: ',
+    save_ok: '渠道已儲存',
+    save_fail: '儲存失敗: ',
+    delete_fail: '刪除失敗: ',
+    p_feishu: '飛書', p_dingtalk: '釘釘', p_wechat: '微信公眾號', p_wework: '企業微信',
+    p_qq: 'QQ', p_telegram: 'Telegram', p_discord: 'Discord', p_slack: 'Slack',
+    f_appId: 'App ID', f_appSecret: 'App Secret', f_appKey: 'App Key',
+    f_verificationToken: '驗證令牌', f_encryptKey: '加密金鑰', f_token: 'Token',
+    f_encodingAESKey: 'Encoding AES Key', f_corpId: 'Corp ID', f_agentId: 'Agent ID',
+    f_secret: 'Secret', f_robotCode: 'Robot Code', f_outgoingToken: 'Outgoing Token',
+    f_sandbox: '沙箱模式', f_botToken: 'Bot Token', f_webhookSecret: 'Webhook Secret',
+    f_applicationId: 'Application ID', f_publicKey: 'Public Key',
+    f_signingSecret: 'Signing Secret', f_appToken: 'App Token',
+  },
+  en: {
+    label: 'EN',
+    page_subtitle: 'Connect Feishu, QQ, WeChat & more',
+    back: 'Back to App',
+    nav_admin: 'API Keys',
+    add_channel: '+ Add Channel',
+    no_channels: 'No channels configured. Click "+ Add Channel" to get started.',
+    enabled: 'Enabled',
+    disabled: 'Disabled',
+    edit: 'Edit',
+    delete_btn: 'Delete',
+    webhook_url: 'Webhook URL',
+    copy: 'Copy',
+    copied: 'Copied!',
+    system_prompt: 'System Prompt',
+    not_set: '(not set)',
+    add_title: 'Add Channel',
+    edit_title: 'Edit Channel',
+    channel_name: 'Channel Name',
+    channel_name_ph: 'e.g. my-feishu-bot',
+    platform: 'Select Platform',
+    sys_prompt_label: 'System Prompt',
+    sys_prompt_ph: 'e.g. You are a helpful customer service agent. Reply concisely and politely.',
+    sys_prompt_tip: 'Define the AI\'s role and behavior. For example: customer support, translator, coding assistant, etc. Leave empty for a general-purpose assistant.',
+    optional: 'optional',
+    save: 'Save',
+    cancel: 'Cancel',
+    delete_title: 'Delete Channel',
+    delete_confirm_1: 'Are you sure you want to delete channel',
+    delete_confirm_2: '? This action cannot be undone.',
+    name_required: 'Channel name is required',
+    platform_required: 'Please select a platform',
+    field_required: 'Please fill required field: ',
+    load_fail: 'Failed to load: ',
+    save_ok: 'Channel saved',
+    save_fail: 'Save failed: ',
+    delete_fail: 'Delete failed: ',
+    p_feishu: 'Feishu', p_dingtalk: 'DingTalk', p_wechat: 'WeChat OA', p_wework: 'WeCom',
+    p_qq: 'QQ', p_telegram: 'Telegram', p_discord: 'Discord', p_slack: 'Slack',
+    f_appId: 'App ID', f_appSecret: 'App Secret', f_appKey: 'App Key',
+    f_verificationToken: 'Verification Token', f_encryptKey: 'Encrypt Key', f_token: 'Token',
+    f_encodingAESKey: 'Encoding AES Key', f_corpId: 'Corp ID', f_agentId: 'Agent ID',
+    f_secret: 'Secret', f_robotCode: 'Robot Code', f_outgoingToken: 'Outgoing Token',
+    f_sandbox: 'Sandbox Mode', f_botToken: 'Bot Token', f_webhookSecret: 'Webhook Secret',
+    f_applicationId: 'Application ID', f_publicKey: 'Public Key',
+    f_signingSecret: 'Signing Secret', f_appToken: 'App Token',
+  },
+  ja: {
+    label: '日本語',
+    page_subtitle: 'Feishu\u3001QQ\u3001WeChat\u306A\u3069\u3092\u63A5\u7D9A',
+    back: '\u30A2\u30D7\u30EA\u306B\u623B\u308B',
+    nav_admin: 'API\u7BA1\u7406',
+    add_channel: '+ \u30C1\u30E3\u30CD\u30EB\u3092\u8FFD\u52A0',
+    no_channels: '\u30C1\u30E3\u30CD\u30EB\u304C\u8A2D\u5B9A\u3055\u308C\u3066\u3044\u307E\u305B\u3093\u3002\u300C+ \u30C1\u30E3\u30CD\u30EB\u3092\u8FFD\u52A0\u300D\u3092\u30AF\u30EA\u30C3\u30AF\u3057\u3066\u304F\u3060\u3055\u3044\u3002',
+    enabled: '\u6709\u52B9',
+    disabled: '\u7121\u52B9',
+    edit: '\u7DE8\u96C6',
+    delete_btn: '\u524A\u9664',
+    webhook_url: 'Webhook URL',
+    copy: '\u30B3\u30D4\u30FC',
+    copied: '\u30B3\u30D4\u30FC\u3057\u307E\u3057\u305F!',
+    system_prompt: '\u30B7\u30B9\u30C6\u30E0\u30D7\u30ED\u30F3\u30D7\u30C8',
+    not_set: '(\u672A\u8A2D\u5B9A)',
+    add_title: '\u30C1\u30E3\u30CD\u30EB\u3092\u8FFD\u52A0',
+    edit_title: '\u30C1\u30E3\u30CD\u30EB\u3092\u7DE8\u96C6',
+    channel_name: '\u30C1\u30E3\u30CD\u30EB\u540D',
+    channel_name_ph: '\u4F8B: my-feishu-bot',
+    platform: '\u30D7\u30E9\u30C3\u30C8\u30D5\u30A9\u30FC\u30E0\u3092\u9078\u629E',
+    sys_prompt_label: '\u30B7\u30B9\u30C6\u30E0\u30D7\u30ED\u30F3\u30D7\u30C8',
+    sys_prompt_ph: '\u4F8B: \u3042\u306A\u305F\u306F\u30D7\u30ED\u306E\u30AB\u30B9\u30BF\u30DE\u30FC\u30B5\u30DD\u30FC\u30C8\u3067\u3059\u3002\u7C21\u6F54\u3067\u4E01\u5BE7\u306B\u56DE\u7B54\u3057\u3066\u304F\u3060\u3055\u3044',
+    sys_prompt_tip: 'AI\u306E\u5F79\u5272\u3068\u884C\u52D5\u30EB\u30FC\u30EB\u3092\u5B9A\u7FA9\u3057\u307E\u3059\u3002\u4F8B: \u30AB\u30B9\u30BF\u30DE\u30FC\u30B5\u30DD\u30FC\u30C8\u3001\u7FFB\u8A33\u8005\u3001\u30B3\u30FC\u30C7\u30A3\u30F3\u30B0\u30A2\u30B7\u30B9\u30BF\u30F3\u30C8\u306A\u3069\u3002\u7A7A\u6B04\u306E\u5834\u5408\u306F\u6C4E\u7528\u30A2\u30B7\u30B9\u30BF\u30F3\u30C8\u3092\u4F7F\u7528\u3057\u307E\u3059\u3002',
+    optional: '\u4EFB\u610F',
+    save: '\u4FDD\u5B58',
+    cancel: '\u30AD\u30E3\u30F3\u30BB\u30EB',
+    delete_title: '\u30C1\u30E3\u30CD\u30EB\u3092\u524A\u9664',
+    delete_confirm_1: '\u30C1\u30E3\u30CD\u30EB',
+    delete_confirm_2: '\u3092\u524A\u9664\u3057\u3066\u3082\u3088\u308D\u3057\u3044\u3067\u3059\u304B\uFF1F\u3053\u306E\u64CD\u4F5C\u306F\u53D6\u308A\u6D88\u305B\u307E\u305B\u3093\u3002',
+    name_required: '\u30C1\u30E3\u30CD\u30EB\u540D\u3092\u5165\u529B\u3057\u3066\u304F\u3060\u3055\u3044',
+    platform_required: '\u30D7\u30E9\u30C3\u30C8\u30D5\u30A9\u30FC\u30E0\u3092\u9078\u629E\u3057\u3066\u304F\u3060\u3055\u3044',
+    field_required: '\u5FC5\u9808\u30D5\u30A3\u30FC\u30EB\u30C9\u3092\u5165\u529B\u3057\u3066\u304F\u3060\u3055\u3044: ',
+    load_fail: '\u8AAD\u307F\u8FBC\u307F\u306B\u5931\u6557: ',
+    save_ok: '\u30C1\u30E3\u30CD\u30EB\u304C\u4FDD\u5B58\u3055\u308C\u307E\u3057\u305F',
+    save_fail: '\u4FDD\u5B58\u306B\u5931\u6557: ',
+    delete_fail: '\u524A\u9664\u306B\u5931\u6557: ',
+    p_feishu: 'Feishu', p_dingtalk: 'DingTalk', p_wechat: 'WeChat OA', p_wework: 'WeCom',
+    p_qq: 'QQ', p_telegram: 'Telegram', p_discord: 'Discord', p_slack: 'Slack',
+    f_appId: 'App ID', f_appSecret: 'App Secret', f_appKey: 'App Key',
+    f_verificationToken: '\u691C\u8A3C\u30C8\u30FC\u30AF\u30F3', f_encryptKey: '\u6697\u53F7\u5316\u30AD\u30FC',
+    f_token: 'Token', f_encodingAESKey: 'Encoding AES Key',
+    f_corpId: 'Corp ID', f_agentId: 'Agent ID', f_secret: 'Secret',
+    f_robotCode: 'Robot Code', f_outgoingToken: 'Outgoing Token',
+    f_sandbox: '\u30B5\u30F3\u30C9\u30DC\u30C3\u30AF\u30B9\u30E2\u30FC\u30C9',
+    f_botToken: 'Bot Token', f_webhookSecret: 'Webhook Secret',
+    f_applicationId: 'Application ID', f_publicKey: 'Public Key',
+    f_signingSecret: 'Signing Secret', f_appToken: 'App Token',
+  },
+};
+
+let curLang = localStorage.getItem('oc_lang') || 'zh-CN';
+if (!LANGS[curLang]) curLang = 'zh-CN';
+
+function t(key) { return LANGS[curLang][key] || key; }
+
+function buildLangSwitcher() {
+  document.getElementById('langSw').innerHTML = Object.entries(LANGS).map(([k, v]) =>
+    `<button class="${k === curLang ? 'active' : ''}" onclick="setLang('${k}')">${v.label}</button>`
+  ).join('');
+}
+
+function applyStaticI18n() {
+  document.documentElement.lang = curLang;
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    el.textContent = t(el.dataset.i18n);
+  });
+  const gwToken = localStorage.getItem('oc_gw_token') || '';
+  const backEl = document.getElementById('btnBack');
+  backEl.textContent = t('back');
+  backEl.href = gwToken ? '/#token=' + gwToken : '/';
+  document.getElementById('btnAdd').textContent = t('add_channel');
+  document.getElementById('footer').innerHTML =
+    '<a href="https://github.com/wulingshani/openclaw-docker" target="_blank">wulingshan</a> \u00b7 ' + t('page_subtitle');
+}
+
+function setLang(lang) {
+  curLang = lang;
+  localStorage.setItem('oc_lang', lang);
+  buildLangSwitcher();
+  applyStaticI18n();
+  renderChannels();
+}
+
+const API = '/channels/api';
+let channels = {};
+let platforms = {};
+
+// ── Toast ──
+function toast(msg, type = 'success') {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(() => {
+    el.classList.add('removing');
+    setTimeout(() => el.remove(), 300);
+  }, 3500);
+}
+
+// ── API ──
+async function fetchChannels() {
+  try {
+    const res = await fetch(`${API}/channels`, { credentials: 'same-origin' });
+    if (res.status === 401) { window.location.href = '/login'; return; }
+    const data = await res.json();
+    channels = data.channels || {};
+    platforms = data.platforms || {};
+    renderChannels();
+  } catch (e) {
+    toast(t('load_fail') + e.message, 'error');
+  }
+}
+
+async function saveChannel(payload) {
+  try {
+    const res = await fetch(`${API}/channels`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    toast(t('save_ok'));
+    fetchChannels();
+  } catch (e) {
+    toast(t('save_fail') + e.message, 'error');
+  }
+}
+
+async function deleteChannel(name) {
+  try {
+    const res = await fetch(`${API}/channels/${encodeURIComponent(name)}`, {
+      method: 'DELETE',
+      credentials: 'same-origin',
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    toast(data.message);
+    fetchChannels();
+  } catch (e) {
+    toast(t('delete_fail') + e.message, 'error');
+  }
+}
+
+async function toggleChannel(name) {
+  try {
+    const res = await fetch(`${API}/channels/${encodeURIComponent(name)}/toggle`, {
+      method: 'POST',
+      credentials: 'same-origin',
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    toast(data.message);
+    fetchChannels();
+  } catch (e) {
+    toast(t('save_fail') + e.message, 'error');
+  }
+}
+
+// ── Render ──
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function platformName(type) { return t('p_' + type) || type; }
+function fieldLabel(key) { return t('f_' + key) || key; }
+
+function getWebhookUrl(name) {
+  return window.location.origin + '/channels/webhook/' + encodeURIComponent(name);
+}
+
+function renderChannels() {
+  const list = document.getElementById('channelList');
+  const names = Object.keys(channels);
+
+  if (names.length === 0) {
+    list.innerHTML = `<div class="card"><div class="empty-state">${esc(t('no_channels'))}</div></div>`;
+    return;
+  }
+
+  list.innerHTML = names.map((name, i) => {
+    const ch = channels[name];
+    const meta = PLATFORM_META[ch.type] || { icon: '🔌', bg: 'linear-gradient(135deg, #666, #444)' };
+    const isEnabled = ch.enabled;
+
+    // Build config fields display
+    const platformDef = platforms[ch.type];
+    const fields = [];
+    if (platformDef) {
+      for (const f of platformDef.fields) {
+        const val = ch.config?.[f.key];
+        if (val) {
+          fields.push(`<div class="card-field"><div class="card-label">${esc(fieldLabel(f.key))}</div><div class="card-value">${esc(val)}</div></div>`);
+        }
+      }
+    }
+
+    if (ch.systemPrompt) {
+      fields.push(`<div class="card-field"><div class="card-label">${esc(t('system_prompt'))}</div><div class="card-value">${esc(ch.systemPrompt.length > 100 ? ch.systemPrompt.slice(0, 100) + '...' : ch.systemPrompt)}</div></div>`);
+    }
+
+    const webhookUrl = getWebhookUrl(name);
+
+    return `<div class="card" style="animation-delay:${i * .05}s">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="platform-icon" style="background:${meta.bg}">${meta.icon}</div>
+          <div>
+            <h3>${esc(name)}</h3>
+            <div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:2px">${esc(platformName(ch.type))}</div>
+          </div>
+        </div>
+        <div class="card-actions">
+          <span class="status-badge ${isEnabled ? 'enabled' : 'disabled'}">
+            <span class="dot"></span>
+            ${esc(isEnabled ? t('enabled') : t('disabled'))}
+          </span>
+          <button class="toggle-sw ${isEnabled ? 'on' : ''}" onclick="toggleChannel('${esc(name)}')" title="${isEnabled ? t('disabled') : t('enabled')}"></button>
+        </div>
+      </div>
+      ${fields.join('')}
+      <div class="webhook-row">
+        <div class="card-label" style="margin-bottom:0;flex-shrink:0">${esc(t('webhook_url'))}</div>
+        <div class="card-value">${esc(webhookUrl)}</div>
+        <button class="copy-btn" onclick="copyWebhook(this, '${esc(webhookUrl)}')">${esc(t('copy'))}</button>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:12px;justify-content:flex-end">
+        <button class="btn btn-secondary btn-sm" onclick="showEditModal('${esc(name)}')">${esc(t('edit'))}</button>
+        <button class="btn btn-danger btn-sm" onclick="showDeleteConfirm('${esc(name)}')">${esc(t('delete_btn'))}</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function copyWebhook(btn, url) {
+  navigator.clipboard.writeText(url).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = t('copied');
+    btn.style.color = '#5fff7f';
+    setTimeout(() => { btn.textContent = orig; btn.style.color = ''; }, 2000);
+  });
+}
+
+// ── Dynamic form fields ──
+let selectedPlatform = '';
+
+function buildDynamicFields(type, existingConfig) {
+  const def = platforms[type];
+  if (!def) return '';
+  return def.fields.map(f => {
+    if (f.type === 'boolean') {
+      const checked = existingConfig?.[f.key] ? 'checked' : '';
+      return `<div class="field">
+        <label>${esc(fieldLabel(f.key))}</label>
+        <label style="display:flex;align-items:center;gap:8px;text-transform:none;font-size:14px;cursor:pointer">
+          <input type="checkbox" class="df-bool" data-key="${f.key}" ${checked} style="width:18px;height:18px;cursor:pointer">
+          <span style="color:rgba(255,255,255,.6)">${esc(fieldLabel(f.key))}</span>
+        </label>
+      </div>`;
+    }
+    const val = existingConfig?.[f.key] || '';
+    const isSecret = f.secret;
+    return `<div class="field">
+      <label>${esc(fieldLabel(f.key))} ${f.required ? '<span class="required-star">*</span>' : `<span style="opacity:.5">(${esc(t('optional'))})</span>`}</label>
+      <input class="df-input" data-key="${f.key}" data-required="${f.required ? '1' : ''}" data-secret="${isSecret ? '1' : ''}"
+             type="${isSecret ? 'password' : 'text'}"
+             value="${!isSecret ? esc(val) : ''}"
+             placeholder="${isSecret && val ? esc(t('not_set').replace('(','').replace(')','') + ': ' + val) : ''}">
+    </div>`;
+  }).join('');
+}
+
+function selectPlatform(type) {
+  selectedPlatform = type;
+  document.querySelectorAll('.platform-option').forEach(el => {
+    el.classList.toggle('selected', el.dataset.type === type);
+  });
+  const container = document.getElementById('dynamicFields');
+  if (container) {
+    container.innerHTML = buildDynamicFields(type);
+  }
+  // Auto-fill name from platform type if empty
+  const nameInput = document.getElementById('m_name');
+  if (nameInput && !nameInput.value) {
+    nameInput.value = type;
+  }
+}
+
+function collectFormData() {
+  const config = {};
+  document.querySelectorAll('.df-input').forEach(el => {
+    const val = el.value.trim();
+    if (val) config[el.dataset.key] = val;
+  });
+  document.querySelectorAll('.df-bool').forEach(el => {
+    config[el.dataset.key] = el.checked;
+  });
+  return config;
+}
+
+function validateForm() {
+  const required = document.querySelectorAll('.df-input[data-required="1"]');
+  for (const el of required) {
+    // Skip if editing and field is secret (may keep existing)
+    if (el.dataset.secret === '1' && el.placeholder) continue;
+    if (!el.value.trim()) {
+      const label = fieldLabel(el.dataset.key);
+      toast(t('field_required') + label, 'error');
+      el.focus();
+      return false;
+    }
+  }
+  return true;
+}
+
+// ── Modals ──
+function closeModal() {
+  const overlay = document.querySelector('.modal-overlay');
+  if (overlay) overlay.remove();
+  selectedPlatform = '';
+}
+
+function showAddModal() {
+  const platformButtons = Object.keys(PLATFORM_META).map(type => {
+    const meta = PLATFORM_META[type];
+    return `<button type="button" class="platform-option" data-type="${type}" onclick="selectPlatform('${type}')">
+      <span class="p-icon">${meta.icon}</span>
+      <span class="p-name">${esc(platformName(type))}</span>
+    </button>`;
+  }).join('');
+
+  const html = `<div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <h2>${esc(t('add_title'))}</h2>
+      <div class="field">
+        <label>${esc(t('platform'))}</label>
+        <div class="platform-grid">${platformButtons}</div>
+      </div>
+      <div class="field">
+        <label>${esc(t('channel_name'))}</label>
+        <input id="m_name" placeholder="${esc(t('channel_name_ph'))}">
+      </div>
+      <div id="dynamicFields" class="dynamic-fields"></div>
+      <div class="field">
+        <label>${esc(t('sys_prompt_label'))} <span style="opacity:.5">(${esc(t('optional'))})</span></label>
+        <textarea id="m_prompt" placeholder="${esc(t('sys_prompt_ph'))}"></textarea>
+        <div class="hint">${esc(t('sys_prompt_tip'))}</div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal()">${esc(t('cancel'))}</button>
+        <button class="btn btn-primary" onclick="submitAdd()">${esc(t('save'))}</button>
+      </div>
+    </div>
+  </div>`;
+  document.body.insertAdjacentHTML('beforeend', html);
+}
+
+function submitAdd() {
+  const name = document.getElementById('m_name').value.trim();
+  if (!name) { toast(t('name_required'), 'error'); return; }
+  if (!selectedPlatform) { toast(t('platform_required'), 'error'); return; }
+  if (!validateForm()) return;
+
+  const type = selectedPlatform;
+  const config = collectFormData();
+  const systemPrompt = document.getElementById('m_prompt').value.trim();
+
+  closeModal();
+  saveChannel({ name, type, enabled: true, config, systemPrompt });
+}
+
+function showEditModal(name) {
+  const ch = channels[name];
+  if (!ch) return;
+
+  selectedPlatform = ch.type;
+  const meta = PLATFORM_META[ch.type] || { icon: '🔌' };
+
+  const fieldsHTML = buildDynamicFields(ch.type, ch.config);
+
+  const html = `<div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <h2>${esc(t('edit_title'))}: ${meta.icon} ${esc(name)}</h2>
+      <div class="field">
+        <label>${esc(t('platform'))}</label>
+        <input value="${esc(platformName(ch.type))}" disabled style="opacity:.6">
+      </div>
+      <div id="dynamicFields" class="dynamic-fields">${fieldsHTML}</div>
+      <div class="field">
+        <label>${esc(t('sys_prompt_label'))} <span style="opacity:.5">(${esc(t('optional'))})</span></label>
+        <textarea id="m_prompt" placeholder="${esc(t('sys_prompt_ph'))}">${esc(ch.systemPrompt || '')}</textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal()">${esc(t('cancel'))}</button>
+        <button class="btn btn-primary" onclick="submitEdit('${esc(name)}')">${esc(t('save'))}</button>
+      </div>
+    </div>
+  </div>`;
+  document.body.insertAdjacentHTML('beforeend', html);
+}
+
+function submitEdit(name) {
+  if (!validateForm()) return;
+
+  const config = collectFormData();
+  const systemPrompt = document.getElementById('m_prompt').value.trim();
+  const ch = channels[name];
+
+  closeModal();
+  saveChannel({ name, type: ch.type, enabled: ch.enabled, config, systemPrompt });
+}
+
+function showDeleteConfirm(name) {
+  const html = `<div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <h2>${esc(t('delete_title'))}</h2>
+      <p class="confirm-text">${esc(t('delete_confirm_1'))} <strong>${esc(name)}</strong>${esc(t('delete_confirm_2'))}</p>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal()">${esc(t('cancel'))}</button>
+        <button class="btn btn-danger" onclick="closeModal();deleteChannel('${esc(name)}')">${esc(t('delete_btn'))}</button>
+      </div>
+    </div>
+  </div>`;
+  document.body.insertAdjacentHTML('beforeend', html);
+}
+
+// ── Init ──
+buildLangSwitcher();
+applyStaticI18n();
+fetchChannels();
+</script>
+</body>
+</html>

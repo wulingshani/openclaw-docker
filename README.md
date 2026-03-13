@@ -17,6 +17,8 @@ Docker Compose deployment for [OpenClaw](https://openclaw.ai/) with Nginx revers
 - **One-command deploy** — `setup.sh` handles everything
 - **Custom login page** — no ugly browser popups
 - **Web admin panel** — manage API keys in browser at `/admin`, no manual file editing
+- **Messaging channels** — connect Feishu, DingTalk, WeChat, QQ, Telegram, Discord, Slack at `/channels`
+- **Feishu SDK long connection** — works behind NAT / intranet, no public IP required
 - **Cookie session** — 7-day auto-expiry, HttpOnly + SameSite protection
 - **Gateway token auto-inject** — login and go, no manual token pasting
 - **Multi-language UI** — Chinese (Simplified/Traditional), English, Japanese
@@ -27,9 +29,12 @@ Docker Compose deployment for [OpenClaw](https://openclaw.ai/) with Nginx revers
 ```
 Browser → Nginx (login + session) → OpenClaw Gateway (internal)
        → /admin                   → Admin API (key management)
+       → /channels                → Channels API (messaging platforms)
+
+Feishu ←WSClient long connection→ Channels Service → AI Provider API
 ```
 
-**Startup order:** Admin → Gateway → Nginx (each waits for the previous to be healthy)
+**Startup order:** Admin + Channels → Gateway → Nginx (each waits for dependencies to be healthy)
 
 ## Download
 
@@ -63,6 +68,17 @@ After login, visit **`/admin`** to manage API keys through the web interface:
 - Visual model configuration — no JSON editing needed
 - Gateway auto-restarts after changes
 - Real-time gateway status indicator
+
+## Messaging Channels
+
+After login, visit **`/channels`** to connect messaging platforms:
+
+- **Supported platforms:** Feishu, DingTalk, WeChat, WeCom, QQ, Telegram, Discord, Slack
+- **Feishu SDK long connection** — uses WebSocket, works on intranet without public callback URL
+- Per-channel system prompt — customize AI personality for each channel
+- Multi-turn conversation — maintains context per user (20 messages, 30-min timeout)
+- Auto-reads AI provider config from `/admin` — no duplicate key setup
+- Enable / disable channels independently
 
 ## Configuration
 
@@ -98,18 +114,22 @@ docker compose --profile cli run --rm openclaw-cli devices list
 ## Project Structure
 
 ```
-├── Dockerfile                 # Nginx image with login + admin pages
-├── docker-compose.yml         # Service orchestration (4 services)
+├── Dockerfile                 # Nginx image with login + admin + channels pages
+├── docker-compose.yml         # Service orchestration (5 services)
 ├── setup.sh                   # One-command setup script
 ├── .env.example               # Environment template
 ├── admin/
 │   └── server.js              # Admin API server (Node.js, zero dependencies)
+├── channels/
+│   ├── server.js              # Channels API + Feishu SDK bridge
+│   └── package.json           # Dependencies (Feishu SDK)
 ├── nginx/
 │   ├── default.conf.template  # Nginx config (envsubst processed)
 │   ├── login.html             # Custom login page
-│   └── admin.html             # API key management page
+│   ├── admin.html             # API key management page
+│   └── channels.html          # Messaging channels management page
 └── data/
-    ├── config/                # Gateway config (auto-generated, persistent)
+    ├── config/                # Gateway + channels config (persistent)
     └── workspace/             # Agent workspace (persistent)
 ```
 

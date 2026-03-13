@@ -59,6 +59,36 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     }
 
+    # ── Channels page (session protected) ──
+    location = /channels {
+        auth_request /auth/check;
+        error_page 401 = @login_redirect;
+        root /usr/share/nginx/html;
+        try_files /channels.html =404;
+    }
+
+    # ── Channels API (session protected, proxy to channels service) ──
+    location /channels/api/ {
+        auth_request /auth/check;
+        error_page 401 = @login_redirect;
+
+        rewrite ^/channels/api/(.*)$ /api/$1 break;
+        proxy_pass http://openclaw-channels:3457;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+    # ── Channels webhooks (public, no auth — external platforms call these) ──
+    location /channels/webhook/ {
+        rewrite ^/channels/webhook/(.*)$ /webhook/$1 break;
+        proxy_pass http://openclaw-channels:3457;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
     # ── Health check (no auth) ──
     location = /healthz {
         proxy_pass http://openclaw-gateway:18789/healthz;

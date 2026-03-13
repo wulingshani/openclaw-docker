@@ -17,6 +17,8 @@
 - **一條指令部署** — `setup.sh` 自動完成所有設定
 - **自訂登入頁面** — 告別醜陋的瀏覽器彈窗
 - **Web 管理面板** — 在瀏覽器中管理 API 金鑰（`/admin`），無需手動編輯檔案
+- **訊息渠道** — 對接飛書、釘釘、微信、QQ、Telegram、Discord、Slack（`/channels`）
+- **飛書 SDK 長連線** — 基於 WebSocket，內網環境無需公網 IP
 - **Cookie 會話** — 7 天自動過期，HttpOnly + SameSite 防護
 - **Gateway Token 自動注入** — 登入即用，無需手動貼上 Token
 - **多語言介面** — 簡體中文、繁體中文、英文、日文
@@ -27,9 +29,12 @@
 ```
 瀏覽器 → Nginx（登入 + 會話管理）→ OpenClaw Gateway（內部）
      → /admin                   → Admin API（金鑰管理）
+     → /channels                → Channels API（訊息渠道）
+
+飛書 ←WSClient 長連線→ Channels 服務 → AI 服務商 API
 ```
 
-**啟動順序：** Admin → Gateway → Nginx（每個服務等待前一個健康後再啟動）
+**啟動順序：** Admin + Channels → Gateway → Nginx（每個服務等待前一個健康後再啟動）
 
 ## 下載
 
@@ -63,6 +68,17 @@ chmod +x setup.sh
 - 視覺化模型設定 — 無需編寫 JSON
 - 修改後 Gateway 自動重啟
 - 即時 Gateway 狀態指示
+
+## 訊息渠道
+
+登入後造訪 **`/channels`**，連接訊息平台：
+
+- **支援平台：** 飛書、釘釘、微信、企業微信、QQ、Telegram、Discord、Slack
+- **飛書 SDK 長連線** — 基於 WebSocket，內網環境無需公網回呼 URL
+- 每個渠道可設定獨立的系統提示詞 — 自訂 AI 人格
+- 多輪對話 — 按使用者維護上下文（20 條訊息，30 分鐘逾時）
+- 自動讀取 `/admin` 中的 AI 服務商設定 — 無需重複設定金鑰
+- 可獨立啟用 / 停用各渠道
 
 ## 設定
 
@@ -98,18 +114,22 @@ docker compose --profile cli run --rm openclaw-cli devices list
 ## 專案結構
 
 ```
-├── Dockerfile                 # 內建登入頁和管理頁的 Nginx 映像
-├── docker-compose.yml         # 服務編排（4 個服務）
+├── Dockerfile                 # 內建登入頁、管理頁和渠道頁的 Nginx 映像
+├── docker-compose.yml         # 服務編排（5 個服務）
 ├── setup.sh                   # 一鍵部署腳本
 ├── .env.example               # 環境變數範本
 ├── admin/
 │   └── server.js              # 管理 API 服務（Node.js，零依賴）
+├── channels/
+│   ├── server.js              # 渠道 API + 飛書 SDK 橋接
+│   └── package.json           # 依賴（飛書 SDK）
 ├── nginx/
 │   ├── default.conf.template  # Nginx 設定範本（envsubst 處理）
 │   ├── login.html             # 自訂登入頁面
-│   └── admin.html             # API 金鑰管理頁面
+│   ├── admin.html             # API 金鑰管理頁面
+│   └── channels.html          # 訊息渠道管理頁面
 └── data/
-    ├── config/                # Gateway 設定（自動產生，持久化）
+    ├── config/                # Gateway + 渠道設定（持久化）
     └── workspace/             # 工作區檔案（持久化）
 ```
 

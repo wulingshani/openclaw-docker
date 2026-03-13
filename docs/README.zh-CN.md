@@ -17,6 +17,8 @@
 - **一条命令部署** — `setup.sh` 自动完成所有配置
 - **自定义登录页面** — 告别丑陋的浏览器弹窗
 - **Web 管理面板** — 在浏览器中管理 API 密钥（`/admin`），无需手动编辑文件
+- **消息渠道** — 对接飞书、钉钉、微信、QQ、Telegram、Discord、Slack（`/channels`）
+- **飞书 SDK 长连接** — 基于 WebSocket，内网环境无需公网 IP
 - **Cookie 会话** — 7 天自动过期，HttpOnly + SameSite 防护
 - **Gateway Token 自动注入** — 登录即用，无需手动粘贴 Token
 - **多语言界面** — 简体中文、繁体中文、英文、日文
@@ -27,9 +29,12 @@
 ```
 浏览器 → Nginx（登录 + 会话管理）→ OpenClaw Gateway（内部）
      → /admin                   → Admin API（密钥管理）
+     → /channels                → Channels API（消息渠道）
+
+飞书 ←WSClient 长连接→ Channels 服务 → AI 服务商 API
 ```
 
-**启动顺序：** Admin → Gateway → Nginx（每个服务等待前一个健康后再启动）
+**启动顺序：** Admin + Channels → Gateway → Nginx（每个服务等待前一个健康后再启动）
 
 ## 下载
 
@@ -63,6 +68,17 @@ chmod +x setup.sh
 - 可视化模型配置 — 无需编写 JSON
 - 修改后 Gateway 自动重启
 - 实时 Gateway 状态指示
+
+## 消息渠道
+
+登录后访问 **`/channels`**，连接消息平台：
+
+- **支持平台：** 飞书、钉钉、微信、企业微信、QQ、Telegram、Discord、Slack
+- **飞书 SDK 长连接** — 基于 WebSocket，内网环境无需公网回调 URL
+- 每个渠道可设置独立的系统提示词 — 自定义 AI 人格
+- 多轮对话 — 按用户维护上下文（20 条消息，30 分钟超时）
+- 自动读取 `/admin` 中的 AI 服务商配置 — 无需重复设置密钥
+- 可独立启用 / 禁用各渠道
 
 ## 配置
 
@@ -98,18 +114,22 @@ docker compose --profile cli run --rm openclaw-cli devices list
 ## 项目结构
 
 ```
-├── Dockerfile                 # 内置登录页和管理页的 Nginx 镜像
-├── docker-compose.yml         # 服务编排（4 个服务）
+├── Dockerfile                 # 内置登录页、管理页和渠道页的 Nginx 镜像
+├── docker-compose.yml         # 服务编排（5 个服务）
 ├── setup.sh                   # 一键部署脚本
 ├── .env.example               # 环境变量模板
 ├── admin/
 │   └── server.js              # 管理 API 服务（Node.js，零依赖）
+├── channels/
+│   ├── server.js              # 渠道 API + 飞书 SDK 桥接
+│   └── package.json           # 依赖（飞书 SDK）
 ├── nginx/
 │   ├── default.conf.template  # Nginx 配置模板（envsubst 处理）
 │   ├── login.html             # 自定义登录页面
-│   └── admin.html             # API 密钥管理页面
+│   ├── admin.html             # API 密钥管理页面
+│   └── channels.html          # 消息渠道管理页面
 └── data/
-    ├── config/                # Gateway 配置（自动生成，持久化）
+    ├── config/                # Gateway + 渠道配置（持久化）
     └── workspace/             # 工作区文件（持久化）
 ```
 

@@ -471,6 +471,7 @@
     </div>
     <div class="top-actions">
       <a href="/" id="btnBack" class="btn btn-secondary btn-sm nav-link" style="color:rgba(255,255,255,.7);text-decoration:none"></a>
+      <a href="/channels" id="btnChannels" class="btn btn-secondary btn-sm nav-link" style="color:rgba(255,255,255,.7);text-decoration:none"></a>
       <button class="btn btn-secondary btn-sm" id="btnRestart" onclick="restartGateway()"></button>
       <button class="btn btn-primary btn-sm" id="btnAdd" onclick="showAddModal()"></button>
     </div>
@@ -490,6 +491,7 @@ const LANGS = {
     page_title: 'API 密钥管理',
     checking: '检查中...',
     back: '返回应用',
+    nav_channels: '消息渠道',
     restart: '重启网关',
     add_provider: '+ 添加服务商',
     gw_healthy: '网关: 运行中 (健康)',
@@ -539,6 +541,7 @@ const LANGS = {
     page_title: 'API 金鑰管理',
     checking: '檢查中...',
     back: '返回應用',
+    nav_channels: '訊息渠道',
     restart: '重啟閘道',
     add_provider: '+ 新增服務商',
     gw_healthy: '閘道: 運行中 (健康)',
@@ -588,6 +591,7 @@ const LANGS = {
     page_title: 'API Key Management',
     checking: 'Checking...',
     back: 'Back to App',
+    nav_channels: 'Channels',
     restart: 'Restart Gateway',
     add_provider: '+ Add Provider',
     gw_healthy: 'Gateway: Running (Healthy)',
@@ -637,6 +641,7 @@ const LANGS = {
     page_title: 'API\u30AD\u30FC\u7BA1\u7406',
     checking: '\u78BA\u8A8D\u4E2D...',
     back: '\u30A2\u30D7\u30EA\u306B\u623B\u308B',
+    nav_channels: '\u30C1\u30E3\u30CD\u30EB',
     restart: '\u30B2\u30FC\u30C8\u30A6\u30A7\u30A4\u3092\u518D\u8D77\u52D5',
     add_provider: '+ \u30D7\u30ED\u30D0\u30A4\u30C0\u30FC\u3092\u8FFD\u52A0',
     gw_healthy: '\u30B2\u30FC\u30C8\u30A6\u30A7\u30A4: \u7A3C\u50CD\u4E2D (\u6B63\u5E38)',
@@ -703,6 +708,7 @@ function applyStaticI18n() {
   const backEl = document.getElementById('btnBack');
   backEl.textContent = t('back');
   backEl.href = gwToken ? '/#token=' + gwToken : '/';
+  document.getElementById('btnChannels').textContent = t('nav_channels');
   document.getElementById('btnRestart').textContent = t('restart');
   document.getElementById('btnAdd').textContent = t('add_provider');
   document.getElementById('statusText').textContent = t('checking');

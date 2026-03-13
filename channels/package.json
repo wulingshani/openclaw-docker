@@ -1,0 +1,8 @@
+{
+  "name": "openclaw-channels",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@larksuiteoapi/node-sdk": "^1.37.0"
+  }
+}
